@@ -29,7 +29,7 @@ type Seller = {
 const DATA: Seller[] = [
   {
     id: "1",
-    name: "Mama Adisa",
+    name: "Mama Adisa", 
     distance: "500m",
     rating: 4.5,
     reviews: 128,
@@ -144,7 +144,7 @@ export default function AccueilScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFD400",
+    backgroundColor: "#ffcc00ff",
     paddingHorizontal: 16,
   },
 

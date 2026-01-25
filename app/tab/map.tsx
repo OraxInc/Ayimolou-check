@@ -1,9 +1,12 @@
 import markers from "@/assets/markers";
 import LottieView from "lottie-react-native";
-import React, { useRef, useState, useEffect } from "react";
-import Toast from "react-native-toast-message";
+import React, { useEffect, useRef, useState } from "react";
+import { FontAwesome } from "@expo/vector-icons";
+import * as Location from "expo-location";
 
 import {
+  Alert,
+  Dimensions,
   FlatList,
   Image,
   ImageBackground,
@@ -13,18 +16,27 @@ import {
   TextInput,
   View,
 } from "react-native";
-import MapView, { Marker } from "react-native-maps";
+import MapView, { Marker, Polyline } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Location from "expo-location";
-import { Dimensions } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 const { width, height } = Dimensions.get("window");
+const API_KEY = "714aaa82e8bf4eb5947edbaeb6aa19e6";
 
 const HomeScreen = () => {
   const mapRef = useRef<MapView>(null);
   const [selectedCard, setSelectedCard] = useState("");
   const [expanded, setExpanded] = useState(false);
   const [userRegion, setUserRegion] = useState<any>(null);
+  const [routeCoords, setRouteCoords] = useState([]);
+  const [clientLocation, setClientLocation] = useState<{ 
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [destination, setDestination] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(markers[0]?.coordinates || null);
 
   useEffect(() => {
     (async () => {
@@ -45,11 +57,52 @@ const HomeScreen = () => {
       };
 
       setUserRegion(region);
+      setClientLocation({ latitude, longitude });
 
       mapRef.current?.animateToRegion(region, 2000);
     })();
   }, []);
 
+  useEffect(() => {
+    if (!clientLocation || !destination) return; // on attend clientLocation ET destination
+
+    const fetchRoute = async () => {
+      try {
+        const origin = `${clientLocation.latitude},${clientLocation.longitude}`;
+        const destinationStr = `${destination.latitude},${destination.longitude}`;
+
+        const res = await fetch(
+          `https://api.geoapify.com/v1/routing?waypoints=${origin}|${destinationStr}&mode=drive&apiKey=${API_KEY}`
+        );
+
+        const data = await res.json();
+
+        if (!data.features || data.features.length === 0) {
+          console.warn("Aucune feature Geoapify trouvée pour l'itinéraire");
+          return;
+        }
+
+        // On récupère toutes les coordonnées, en supportant plusieurs segments
+        const coords = data.features[0].geometry.coordinates[0] // <- premier tableau imbriqué
+          .map(([lon, lat]: [number, number]) => ({
+            latitude: Number(lat),
+            longitude: Number(lon),
+          }))
+          .filter(
+            (coord: { latitude: number; longitude: number }) =>
+              !isNaN(coord.latitude) && !isNaN(coord.longitude)
+          );
+
+        console.log("Polyline coords:", coords);
+        setRouteCoords(coords);
+      } catch (err) {
+        console.error("Erreur fetch Geoapify :", err);
+      }
+    };
+
+    fetchRoute();
+  }, [destination]);
+  console.log("routeCoords", routeCoords);
   return (
     <SafeAreaView
       className="flex-1 bg-primary"
@@ -61,7 +114,7 @@ const HomeScreen = () => {
         style={styles.map}
         showsUserLocation
         region={userRegion}
-        mapPadding={{ top: 0, right: 0, bottom: 300, left: 0 }}
+        mapPadding={{ top: 0, right: 0, bottom: 360, left: 0 }}
       >
         {markers.map((marker) => (
           <Marker
@@ -75,6 +128,15 @@ const HomeScreen = () => {
             }
           />
         ))}
+
+        {routeCoords.length > 0 && (
+          <Polyline
+            coordinates={routeCoords}
+            strokeWidth={6}
+            strokeColor="blue"
+            lineCap="round"
+          />
+        )}
       </MapView>
       <View style={styles.searchBarContainer} className="bg-gray">
         <TextInput
@@ -94,7 +156,7 @@ const HomeScreen = () => {
       </View>
 
       <View style={styles.markerListContainer}>
-        <Pressable
+        <Pressable // bouton jaune d'expansion/repliage
           onPress={() => setExpanded(!expanded)}
           className="items-center h-8 w-8 rounded-full shadow-md bg-primary m-2"
         >
@@ -104,12 +166,11 @@ const HomeScreen = () => {
             source={require("../../assets/images/sarrow.png")}
           />
         </Pressable>
-        {expanded && (
           <FlatList
             numColumns={2}
             className="w-full"
             style={{
-              height: height * 0.527, // un peu moins de la moitié
+              height: height * 0.49, //hauteur conteneur des cardes vendeur un peu moins de la moitié
             }}
             columnWrapperStyle={{ gap: 10 }}
             data={markers}
@@ -117,7 +178,17 @@ const HomeScreen = () => {
             renderItem={({ item: marker }) => (
               <Pressable
                 onPress={() => {
+                  if (marker.name === selectedCard) {
+                    // ✅ Deuxième clic sur la même card
+                    Alert.alert(
+                      "Commande",
+                      `Voulez-vous commander chez ${marker.name} ?`
+                    );
+                    return;
+                  }
+
                   setSelectedCard(marker.name);
+                  setDestination(marker.coordinates);
                   mapRef.current?.animateToRegion(marker.coordinates, 1000);
                 }}
                 style={
@@ -130,6 +201,7 @@ const HomeScreen = () => {
                   source={{ uri: marker.image }}
                   style={styles.markerImage}
                 />
+
                 <View style={styles.markerInfo}>
                   <View className="mr-4 ml-4 mb-2 mt-2">
                     <Text
@@ -141,6 +213,54 @@ const HomeScreen = () => {
                     >
                       {marker.name}
                     </Text>
+
+                    {/* --- Étoiles + note --- */}
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        marginBottom: 4,
+                      }}
+                    >
+                      {/* Étoiles */}
+                      <View style={{ flexDirection: "row" }}>
+                        {Array.from({ length: 5 }).map((_, index) => (
+                          <FontAwesome
+                            key={index}
+                            name={index < marker.etoile ? "star" : "star-o"}
+                            size={14}
+                            color={
+                              marker.name === selectedCard
+                                ? "#FFF200"
+                                : "#c61e1e"
+                            }
+                            style={{
+                              opacity: marker.name === selectedCard ? 1 : 0.7,
+                            }}
+                          />
+                        ))}
+                      </View>
+
+                      {/* Note à droite */}
+                      <Text
+                        style={
+                          marker.name === selectedCard
+                            ? {
+                                color: "#FFFFFF",
+                                fontWeight: "500",
+                                marginLeft: 6,
+                              }
+                            : {
+                                color: "#000000",
+                                fontWeight: "500",
+                                marginLeft: 6,
+                              }
+                        }
+                      >
+                        {marker.etoile}.0
+                      </Text>
+                    </View>
+
                     <Text
                       style={
                         marker.name === selectedCard
@@ -156,7 +276,6 @@ const HomeScreen = () => {
             )}
             showsHorizontalScrollIndicator={false}
           />
-        )}
       </View>
     </SafeAreaView>
   );
@@ -190,7 +309,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   markerButton: {
-    backgroundColor: "#ffd000ff",
+    backgroundColor: "rgb(255, 255, 255)",
     borderRadius: 10,
     shadowColor: "#000",
     shadowOpacity: 0.1,
@@ -202,7 +321,7 @@ const styles = StyleSheet.create({
   markerImage: {
     borderRadius: 10,
     width: "auto",
-    height: height / 6.5,
+    height: height / 6.8,
   },
   markerInfo: {
     flex: 1,
