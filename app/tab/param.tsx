@@ -1,17 +1,48 @@
-import React, { useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import React, { useContext } from "react";
 import {
-  View,
-  Text,
+  SafeAreaView,
   StyleSheet,
   Switch,
+  Text,
   TouchableOpacity,
-  SafeAreaView,
+  View,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { SettingsContext } from "../context/SettingsContext";
 
 export default function ParamScreen() {
-  const [isClient, setIsClient] = useState(true);
-  const [isVendeur, setIsVendeur] = useState(false);
+  const {
+    isClient,
+    setIsClient,
+    isLivreur,
+    setIsLivreur,
+    isVendeur,
+    setIsVendeur,
+  } = useContext(SettingsContext);
+
+  const handleClientChange = (value: boolean) => {
+    setIsClient(value);
+    if (value) {
+      setIsLivreur(false);
+      setIsVendeur(false);
+    }
+  };
+
+  const handleLivreurChange = (value: boolean) => {
+    setIsLivreur(value);
+    if (value) {
+      setIsClient(false);
+      setIsVendeur(false);
+    }
+  };
+
+  const handleVendeurChange = (value: boolean) => {
+    setIsVendeur(value);
+    if (value) {
+      setIsClient(false);
+      setIsLivreur(false);
+    }
+  };
 
   const Item = ({
     icon,
@@ -53,15 +84,38 @@ export default function ParamScreen() {
           <Ionicons name="person-outline" size={22} color="#555" />
           <Text style={styles.itemText}>Client</Text>
         </View>
-        <Switch value={isClient} onValueChange={setIsClient}  trackColor={{true: "#e5ddb9ff" }} thumbColor={isClient ? "#ffd000ff" : "#f4f4f5"}/>
+        <Switch
+          value={isClient}
+          onValueChange={handleClientChange}
+          trackColor={{ true: "#e5ddb9ff" }}
+          thumbColor={isClient ? "#ffd000ff" : "#f4f4f5"}
+        />
       </View>
 
       <View style={styles.switchItem}>
         <View style={styles.itemLeft}>
           <Ionicons name="lock-closed-outline" size={22} color="#555" />
+          <Text style={styles.itemText}>Livreur</Text>
+        </View>
+        <Switch
+          value={isLivreur}
+          onValueChange={handleLivreurChange}
+          trackColor={{ true: "#e5ddb9ff" }}
+          thumbColor={isLivreur ? "#ffd000ff" : "#f4f4f5"}
+        />
+      </View>
+
+      <View style={styles.switchItem}>
+        <View style={styles.itemLeft}>
+          <Ionicons name="storefront-outline" size={22} color="#555" />
           <Text style={styles.itemText}>Vendeur</Text>
         </View>
-        <Switch value={isVendeur} onValueChange={setIsVendeur} trackColor={{true: "#e5ddb9ff" }} thumbColor={isVendeur ? "#ffd000ff" : "#f4f4f5"}/>
+        <Switch
+          value={isVendeur}
+          onValueChange={handleVendeurChange}
+          trackColor={{ true: "#e5ddb9ff" }}
+          thumbColor={isVendeur ? "#ffd000ff" : "#f4f4f5"}
+        />
       </View>
 
       {/* Assistance */}

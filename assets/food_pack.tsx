@@ -1,31 +1,69 @@
-const pack_food = [
+﻿let pack_food = [
   {
-    name: "standard pack",
+    id: 1,
+    name_vendeur: "Da Ayeleyé",
+    name_pack: "standard pack",
+    selected: false,
     prix: 300,
-    quantiteé: 1,
-    image: require("../assets/images/food_pack1.avif"),
-},
+    quantité: 1,
+    image:"https://loremflickr.com/640/480/food,rice,beans?lock=11",
+  },
 
-{
-    name: "moyens pack",
+  {
+    id: 2,
+    name_vendeur: "Da Ayeleyé",
+    name_pack: "pack moyens",
+    selected: false,
     prix: 500,
-    quantiteé: 1,
-    image: require("../assets/images/food_pack2.avif"),
-},
+    quantité: 1,
+    image:
+      "https://loremflickr.com/640/480/food,plate?lock=12",
+  },
 
-{
-    name: "big pack",
+  {
+    id: 3,
+    name_vendeur: "Da Ayeleyé",
+    name_pack: "pack big",
+    selected: false,
     prix: 1000,
-    quantiteé: 1,
-    image: require("../assets/images/food_pack2.avif"),
-},
+    quantité: 1,
+    image:
+      "https://loremflickr.com/640/480/food,meal?lock=13",
+  },
 
-{
-    name: "bigbig pack",
+  {
+    id: 4,
+    name_vendeur: "Tata edvige",
+    name_pack: "bigbig pack",
+    selected: false,
     prix: 2000,
-    quantiteé: 1,
-    image: require("../assets/images/food_pack2.avif"),
-}
+    quantité: 1,
+    image:
+      "https://loremflickr.com/640/480/food,restaurant?lock=14",
+  },
+
+  {
+    id: 5,
+    name_vendeur: "Tata edvige",
+    name_pack: "boss pack",
+    selected: false,
+    prix: 2000,
+    quantité: 1,
+    image:
+      "https://loremflickr.com/640/480/food,restaurant?lock=15",
+  },
+
+  {
+    id: 6,
+    name_vendeur: "Chez Tata Audrey",
+    name_pack: "glow pack",
+    selected: false,
+    prix: 2000,
+    quantité: 1,
+    image:
+      "https://loremflickr.com/640/480/food,restaurant?lock=16",
+  },
 ];
 
 export default pack_food;
+

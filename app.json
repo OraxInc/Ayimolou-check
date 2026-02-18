@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "TP3003",
-    "slug": "TP3003",
+    "name": "Ayimolou-check",
+    "slug": "Ayimolou-check",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/camion_tp3003.png",
-    "scheme": "TP3003",
+    "scheme": "Ayimolou-check",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

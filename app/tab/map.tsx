@@ -1,8 +1,9 @@
+import pack_food from "@/assets/food_pack";
 import markers from "@/assets/markers";
+import { Feather, FontAwesome } from "@expo/vector-icons";
+import * as Location from "expo-location";
 import LottieView from "lottie-react-native";
 import React, { useEffect, useRef, useState } from "react";
-import { FontAwesome } from "@expo/vector-icons";
-import * as Location from "expo-location";
 
 import {
   Alert,
@@ -10,26 +11,62 @@ import {
   FlatList,
   Image,
   ImageBackground,
+  Linking,
+  Modal,
   Pressable,
   StyleSheet,
-  Text,
   TextInput,
   View,
 } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { Text } from "react-native";
 
 const { width, height } = Dimensions.get("window");
 const API_KEY = "714aaa82e8bf4eb5947edbaeb6aa19e6";
 
 const HomeScreen = () => {
   const mapRef = useRef<MapView>(null);
+  const [selectedPacks, setSelectedPacks] = useState<Record<string, number>>(
+    {},
+  );
   const [selectedCard, setSelectedCard] = useState("");
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(true); // Etendu par défaut
   const [userRegion, setUserRegion] = useState<any>(null);
-  const [routeCoords, setRouteCoords] = useState([]);
-  const [clientLocation, setClientLocation] = useState<{ 
+  const [routeCoords, setRouteCoords] = useState<any[]>([]);
+  const [showFoodAlert, setShowFoodAlert] = useState(false);
+  const [packs, setPacks] = useState(() => pack_food.map((p) => ({ ...p })));
+  const [packByVendor, setPackByVendor] = useState(() =>
+    pack_food.map((p) => ({ ...p })),
+  );
+  const resumeCommander = () => {
+    const selected = packByVendor.filter((p) => p.selected);
+    if (selected.length === 0) {
+      Alert.alert("Aucun pack sélectionné");
+      return;
+    }
+
+    const lines = selected.map((p) => `${p.name_pack} : ${p.prix}F`).join("\n");
+    const total = selected.reduce((sum, p) => sum + p.prix, 0);
+
+    Alert.alert("Commande", `${lines}\n-----\nTotal : ${total}F`);
+  };
+  const togglePack = (id: number) => {
+    // Update the master list
+    setPacks((prev) =>
+      prev.map((pack) =>
+        pack.id === id ? { ...pack, selected: !pack.selected } : pack,
+      ),
+    );
+
+    // Also update the currently shown vendor list so UI updates immediately
+    setPackByVendor((prev) =>
+      prev.map((pack) =>
+        pack.id === id ? { ...pack, selected: !pack.selected } : pack,
+      ),
+    );
+  };
+  const [clientLocation, setClientLocation] = useState<{
     latitude: number;
     longitude: number;
   } | null>(null);
@@ -64,15 +101,17 @@ const HomeScreen = () => {
   }, []);
 
   useEffect(() => {
-    if (!clientLocation || !destination) return; // on attend clientLocation ET destination
+    // capture destination to preserve type-narrowing inside the async function
+    const dest = destination;
+    if (!clientLocation || !dest) return; // on attend clientLocation ET destination
 
     const fetchRoute = async () => {
       try {
         const origin = `${clientLocation.latitude},${clientLocation.longitude}`;
-        const destinationStr = `${destination.latitude},${destination.longitude}`;
+        const destinationStr = `${dest.latitude},${dest.longitude}`;
 
         const res = await fetch(
-          `https://api.geoapify.com/v1/routing?waypoints=${origin}|${destinationStr}&mode=drive&apiKey=${API_KEY}`
+          `https://api.geoapify.com/v1/routing?waypoints=${origin}|${destinationStr}&mode=drive&apiKey=${API_KEY}`,
         );
 
         const data = await res.json();
@@ -90,7 +129,7 @@ const HomeScreen = () => {
           }))
           .filter(
             (coord: { latitude: number; longitude: number }) =>
-              !isNaN(coord.latitude) && !isNaN(coord.longitude)
+              !isNaN(coord.latitude) && !isNaN(coord.longitude),
           );
 
         console.log("Polyline coords:", coords);
@@ -101,14 +140,161 @@ const HomeScreen = () => {
     };
 
     fetchRoute();
-  }, [destination]);
+  }, [clientLocation, destination]);
+
   console.log("routeCoords", routeCoords);
+
+  // marker currently selected (for menu status)
+  const currentMarker = markers.find((m) => m.name === selectedCard);
+
   return (
     <SafeAreaView
       className="flex-1 bg-primary"
       style={{ flex: 1 }}
       edges={["top", "left", "right"]}
     >
+      {/* Alert customiser du menu */}
+      <Modal
+        visible={showFoodAlert}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowFoodAlert(false)}
+      >
+        {/* CONTENEUR PLEIN ÉCRAN */}
+        <View style={styles.fullscreen}>
+          {/* FOND CLIQUABLE */}
+          <Pressable
+            style={styles.overlay} // fond semi-transparent sombre
+            onPress={() => {
+              // fermer le modal sans réinitialiser les sélections (conserver l'état)
+              setShowFoodAlert(false);
+            }}
+          />
+
+          {/* CONTENU MODAL */}
+          <View style={styles.modalBox}>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "flex-start",
+                alignItems: "center",
+              }}
+            >
+              {currentMarker && (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <View className="w-50 h-50 mb-2 rounded-full bg-red-300 justify-center items-center flex-row">
+                    <Image
+                      source={require("../../assets/images/profil_2.png")}
+                      style={{
+                        width: 50,
+                        height: 50,
+                        borderRadius: 30,
+                        borderColor: "#b62804",
+                        borderWidth: 4,
+                      }}
+                    />
+
+                    <View
+                      style={[
+                        styles.modalStatusDot,
+                        {
+                          backgroundColor: currentMarker.status
+                            ? "#34ab51"
+                            : "#D94343",
+                        },
+                      ]}
+                    />
+                  </View>
+
+                  <View
+                    style={{ marginLeft: 2, flex: 1, flexDirection: "column" }}
+                  >
+                    <Text style={styles.title}> {selectedCard} </Text>
+                    <Text
+                      style={[
+                        styles.modalStatusText,
+                        {
+                          color: currentMarker.status ? "#34ab51" : "#D94343",
+                        },
+                      ]}
+                    >
+                      {currentMarker.status ? "Ouvert" : "Fermé"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.callbutton}>
+                    <Pressable
+                      onPress={() => {
+                        if (currentMarker && currentMarker.phone) {
+                          Linking.openURL(`tel:${currentMarker.phone}`);
+                        }
+                      }}
+                    >
+                      <FontAwesome
+                        name="phone"
+                        size={32}
+                        color="black"
+                        style={styles.callImage}
+                      />
+                    </Pressable>
+                  </View>
+
+                  {currentMarker && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                      }}
+                    ></View>
+                  )}
+                </View>
+              )}
+            </View>
+
+            <FlatList // liste des packs de plats
+              data={packByVendor}
+              numColumns={2}
+              keyExtractor={(item) => String(item.id)}
+              columnWrapperStyle={{ gap: 10 }}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 20 }}
+              nestedScrollEnabled
+              renderItem={({ item }) => (
+                <Pressable
+                  onPress={() => {
+                    // Mise à jour via l'état partagé
+                    togglePack(item.id);
+                    console.log("selectedfoodcard", item);
+                  }}
+                  style={item.selected ? styles.cardfoodSelect : styles.card}
+                >
+                  <Image source={{ uri: item.image }} style={styles.image} />
+
+                  <Text style={styles.packName}>{item.name_pack}</Text>
+
+                  <Text style={styles.qte}>Quantité : {item.quantité}</Text>
+
+                  <Text style={styles.price}>{item.prix} FCFA</Text>
+                </Pressable>
+              )}
+            />
+            <Pressable // bouton de commande rouge
+              onPress={() => {
+                resumeCommander();
+              }}
+              className="mt-4 bg-red rounded-full py-4 px-4 items-center"
+            >
+              <Text className="text-white font-bold">Commander !</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
       <MapView
         ref={mapRef}
         style={styles.map}
@@ -166,6 +352,7 @@ const HomeScreen = () => {
             source={require("../../assets/images/sarrow.png")}
           />
         </Pressable>
+        {expanded && (
           <FlatList
             numColumns={2}
             className="w-full"
@@ -176,14 +363,16 @@ const HomeScreen = () => {
             data={markers}
             keyExtractor={(item) => item.name}
             renderItem={({ item: marker }) => (
-              <Pressable
+              <Pressable // card vendeur pour afficher le menu
                 onPress={() => {
                   if (marker.name === selectedCard) {
-                    // ✅ Deuxième clic sur la même card
-                    Alert.alert(
-                      "Commande",
-                      `Voulez-vous commander chez ${marker.name} ?`
-                    );
+                    // ✅ Deuxième clic sur la même card -> ouvrir menu avec packs à jour
+                    const vendorPacks = packs
+                      .filter((pack) => pack.name_vendeur === marker.name)
+                      .map((p) => ({ ...p }));
+                    setPackByVendor(vendorPacks);
+                    setShowFoodAlert(true);
+                    console.log("Menu ouvert pour", marker.name);
                     return;
                   }
 
@@ -204,15 +393,28 @@ const HomeScreen = () => {
 
                 <View style={styles.markerInfo}>
                   <View className="mr-4 ml-4 mb-2 mt-2">
-                    <Text
-                      style={
-                        marker.name === selectedCard
-                          ? styles.activeMarkerName
-                          : styles.markerName
-                      }
+                    <View
+                      style={{ flexDirection: "row", alignItems: "center" }}
                     >
-                      {marker.name}
-                    </Text>
+                      <Feather
+                        name="user-check"
+                        size={18}
+                        color={
+                          marker.name === selectedCard ? "#FFF200" : "#333"
+                        }
+                        style={{ marginRight: 8 }}
+                      />
+
+                      <Text
+                        style={
+                          marker.name === selectedCard
+                            ? styles.activeMarkerName
+                            : styles.markerName
+                        }
+                      >
+                        {marker.name}
+                      </Text>
+                    </View>
 
                     {/* --- Étoiles + note --- */}
                     <View
@@ -232,7 +434,7 @@ const HomeScreen = () => {
                             color={
                               marker.name === selectedCard
                                 ? "#FFF200"
-                                : "#c61e1e"
+                                : "#000000"
                             }
                             style={{
                               opacity: marker.name === selectedCard ? 1 : 0.7,
@@ -276,6 +478,7 @@ const HomeScreen = () => {
             )}
             showsHorizontalScrollIndicator={false}
           />
+        )}
       </View>
     </SafeAreaView>
   );
@@ -284,7 +487,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f0f0f0",
+    backgroundColor: "#FFC700",
   },
   map: {
     flex: 1,
@@ -309,7 +512,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   markerButton: {
-    backgroundColor: "rgb(255, 255, 255)",
+    backgroundColor: "#FFC700",
     borderRadius: 10,
     shadowColor: "#000",
     shadowOpacity: 0.1,
@@ -369,6 +572,143 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     backgroundColor: "rgba(245, 245, 245, 0.4)",
+  },
+  fullscreen: {
+    flex: 1,
+  },
+
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.16)",
+    top: 10,
+    bottom: 18,
+    left: 0,
+    right: 0,
+  },
+
+  modalBox: {
+    alignSelf: "center",
+    marginTop: 60,
+    width: "85%",
+    height: "72%",
+    backgroundColor: "#ffffff",
+    borderRadius: 14,
+    padding: 12,
+  },
+
+  title: {
+    fontSize: 13,
+    color: "black",
+  },
+
+  // helper styles for status in modal header
+  modalStatusDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginTop: 35,
+    left: 35,
+    position: "absolute",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
+  callImage: {
+    width: 32,
+    height: 32,
+    marginBottom: 15,
+  },
+
+  callbutton: {},
+
+  modalStatusText: {
+    fontSize: 11,
+    marginBottom: 2,
+    marginLeft: 2,
+    fontWeight: "600",
+  },
+
+  card: {
+    width: "48%",
+    backgroundColor: "#e2e2e2",
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 10,
+    alignItems: "center",
+  },
+
+  cardfoodSelect: {
+    width: "48%",
+    backgroundColor: "#f1d88f",
+    borderRadius: 12,
+    padding: 10,
+    marginBottom: 10,
+    alignItems: "center",
+  },
+
+  image: {
+    width: 100,
+    height: 80,
+    borderRadius: 8,
+    marginBottom: 6,
+  },
+
+  packName: {
+    fontSize: 14,
+    fontWeight: "600",
+    textAlign: "center",
+  },
+
+  qte: {
+    fontSize: 13,
+    color: "#555",
+    marginVertical: 2,
+  },
+
+  price: {
+    fontWeight: "bold",
+    color: "#a90808",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#e0e0e0",
+    marginBottom: 12,
+  },
+  vendorLeftSection: {
+    flex: 1,
+    alignItems: "flex-start",
+  },
+  vendorName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 4,
+  },
+  statusText: {
+    fontSize: 10,
+    color: "#555",
+    fontWeight: "500",
+  },
+  menuTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+    flex: 1,
+    textAlign: "center",
+  },
+  tiktokButton: {
+    flex: 1,
+    alignItems: "flex-end",
+    padding: 8,
   },
 });
 export default HomeScreen;
