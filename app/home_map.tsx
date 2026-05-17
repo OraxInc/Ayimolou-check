@@ -16,7 +16,7 @@ const initialLayout = { width: Dimensions.get("window").width };
 export default function HomeMap() {
   const [index, setIndex] = useState(0);
   const { isLivreur } = useContext(SettingsContext);
-
+  // On définit les routes (onglets) en fonction du rôle de l'utilisateur
   const routes = useMemo(() => {
     const base: Array<{ key: string; title: string; icon: any }> = [
       { key: "accueil", title: "Home", icon: "home-outline" as const },

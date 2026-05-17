@@ -1,17 +1,17 @@
+import { Feather } from "@expo/vector-icons";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
+  Dimensions,
   FlatList,
   Image,
-  Pressable,
   Modal,
-  Dimensions,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
 } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
 
 const { width, height } = Dimensions.get("window");
 
