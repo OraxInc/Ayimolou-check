@@ -1,17 +1,23 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
+import { Platform } from "react-native";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:5000/api";
+// On Android emulator, `localhost` refers to the emulator itself – use 10.0.2.2 instead.
+// On iOS simulator or web, localhost works fine. Physical devices should use your machine's IP.
+const defaultHost = Platform.OS === "android" ? "http://10.0.2.2:5000" : "http://localhost:5000";
+const API_URL = process.env.EXPO_PUBLIC_API_URL || `${defaultHost}/api`;
+
+console.log("Using backend API URL", API_URL);
 
 export const useBackendApi = () => {
   const { getToken } = useAuth();
   const { user } = useUser();
- 
+
   const syncUserWithBackend = async () => {
     if (!user) return;
 
     try {
       const token = await getToken();
-      
+
       const response = await fetch(`${API_URL}/users/sync`, {
         method: "POST",
         headers: {
@@ -83,7 +89,9 @@ export const useBackendApi = () => {
     }
   };
 
-  const getProducts = async (filters: { vendorId?: string; categoryId?: string } = {}) => {
+  const getProducts = async (
+    filters: { vendorId?: string; categoryId?: string } = {},
+  ) => {
     try {
       const token = await getToken();
       const query = new URLSearchParams(filters as any).toString();
@@ -119,10 +127,13 @@ export const useBackendApi = () => {
   const getMyOrders = async (clientId: string) => {
     try {
       const token = await getToken();
-      const response = await fetch(`${API_URL}/orders/my-orders?clientId=${clientId}`, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await fetch(
+        `${API_URL}/orders/my-orders?clientId=${clientId}`,
+        {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       return response.ok ? await response.json() : [];
     } catch (error) {
       console.error("Error fetching my orders:", error);
@@ -332,11 +343,11 @@ export const useBackendApi = () => {
         method: "PATCH",
         headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (response.status === 409) {
         return { success: false, conflict: true };
       }
-      
+
       return { success: response.ok, conflict: false };
     } catch (error) {
       console.error("Error assigning delivery:", error);
@@ -358,7 +369,11 @@ export const useBackendApi = () => {
     }
   };
 
-  const updateDriverLocation = async (uid: string, latitude: number, longitude: number) => {
+  const updateDriverLocation = async (
+    uid: string,
+    latitude: number,
+    longitude: number,
+  ) => {
     try {
       const token = await getToken();
       const response = await fetch(`${API_URL}/users/${uid}/driver-location`, {
@@ -376,17 +391,23 @@ export const useBackendApi = () => {
     }
   };
 
-  const updateDriverAvailability = async (uid: string, isAvailable: boolean) => {
+  const updateDriverAvailability = async (
+    uid: string,
+    isAvailable: boolean,
+  ) => {
     try {
       const token = await getToken();
-      const response = await fetch(`${API_URL}/users/${uid}/driver-availability`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const response = await fetch(
+        `${API_URL}/users/${uid}/driver-availability`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ isAvailable }),
         },
-        body: JSON.stringify({ isAvailable }),
-      });
+      );
       return response.ok;
     } catch (error) {
       console.error("Error updating driver availability:", error);

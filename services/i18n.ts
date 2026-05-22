@@ -1,0 +1,255 @@
+// Traductions pour l'application
+export type Language = "fr" | "en" | "ewe";
+
+export const translations = {
+  fr: {
+    // Login
+    continueWithGoogle: "Continuer avec Google",
+    termsAndPrivacy:
+      "En continuant, vous acceptez nos conditions d\'utilisation et notre politique de confidentialité.",
+
+    // Index/Home
+    go: "Go !",
+
+    // Settings/Param
+    parameters: "Paramètres",
+    userMode: "Mode Utilisateur",
+    client: "Client",
+    delivery: "Livreur",
+    vendor: "Vendeur",
+    assistanceAndLegal: "Assistance et Légal",
+    reportProblem: "Signaler un problème",
+    helpCenter: "Centre d\'aide",
+    privacyAndSecurity: "Confidentialité et sécurité",
+    language: "Langue",
+    french: "Français",
+    english: "Anglais",
+    ewe: "Ewe",
+    actions: "Actions",
+    logout: "Déconnexion",
+    logoutError: "Erreur lors de la déconnexion",
+
+    // Vendor Dashboard
+    newOrder: "Nouvelle commande !",
+    newOrderReceived: "Une commande vient d\'arriver.",
+    orders: "Commandes",
+    products: "Produits",
+    settings: "Paramètres",
+    ordersTab: "Commandes",
+    productsTab: "Mes Plats",
+    settingsTab: "Boutique",
+    addProduct: "Ajouter un produit",
+    editProduct: "Modifier le produit",
+    closeProduct: "Fermer le produit",
+    openProduct: "Ouvrir le produit",
+    delete: "Supprimer",
+    accept: "Accepter",
+    reject: "Rejeter",
+    complete: "Complété",
+    incomplete: "Description complète requise",
+    pleaseComplete: "Veuillez remplir le nom, la description et le prix.",
+    shopOpen: "Boutique ouverte",
+    shopClosed: "Boutique fermée",
+    errorUpdating: "Erreur",
+    errorUpdatingStatus: "Impossible de mettre à jour le statut.",
+    open: "Ouvert",
+    closed: "Fermé",
+    reviews: "avis",
+    activeOrder: "Commande en cours",
+    askingConfirmation: "⏳ En attente de confirmation",
+    orderAccepted: "✅ Commande acceptée",
+    preparing: "👨‍🍳 En préparation...",
+    readyForDelivery: "🍛 Prête à être livrée",
+    delivering: "🛵 En livraison !",
+
+    // Accueil (Home page)
+    search: "Rechercher",
+    vendors: "Vendeurs",
+    categories: "Catégories",
+    price: "Prix",
+    distance: "Distance",
+    rating: "Évaluation",
+    loading: "Chargement...",
+    noVendors: "Aucun vendeur disponible",
+
+    // Common
+    save: "Enregistrer",
+    cancel: "Annuler",
+    confirm: "Confirmer",
+    ok: "OK",
+    close: "Fermer",
+    back: "Retour",
+    error: "Erreur",
+    success: "Succès",
+    loading_text: "Chargement...",
+  },
+  en: {
+    // Login
+    continueWithGoogle: "Continue with Google",
+    termsAndPrivacy:
+      "By continuing, you accept our terms of use and privacy policy.",
+
+    // Index/Home
+    go: "Go !",
+
+    // Settings/Param
+    parameters: "Settings",
+    userMode: "User Mode",
+    client: "Client",
+    delivery: "Delivery",
+    vendor: "Vendor",
+    assistanceAndLegal: "Support and Legal",
+    reportProblem: "Report a Problem",
+    helpCenter: "Help Center",
+    privacyAndSecurity: "Privacy and Security",
+    language: "Language",
+    french: "French",
+    english: "English",
+    ewe: "Ewe",
+    actions: "Actions",
+    logout: "Logout",
+    logoutError: "Error during logout",
+
+    // Vendor Dashboard
+    newOrder: "New Order!",
+    newOrderReceived: "A new order has arrived.",
+    orders: "Orders",
+    products: "Products",
+    settings: "Settings",
+    ordersTab: "Orders",
+    productsTab: "My Dishes",
+    settingsTab: "Shop",
+    addProduct: "Add Product",
+    editProduct: "Edit Product",
+    closeProduct: "Close Product",
+    openProduct: "Open Product",
+    delete: "Delete",
+    accept: "Accept",
+    reject: "Reject",
+    complete: "Complete",
+    incomplete: "Complete description required",
+    pleaseComplete: "Please fill in the name, description and price.",
+    shopOpen: "Shop Open",
+    shopClosed: "Shop Closed",
+    errorUpdating: "Error",
+    errorUpdatingStatus: "Unable to update status.",
+    open: "Open",
+    closed: "Closed",
+    reviews: "reviews",
+    activeOrder: "Order in progress",
+    askingConfirmation: "⏳ Awaiting confirmation",
+    orderAccepted: "✅ Order accepted",
+    preparing: "👨‍🍳 Preparing...",
+    readyForDelivery: "🍛 Ready for delivery",
+    delivering: "🛵 On the way !",
+
+    // Accueil (Home page)
+    search: "Search",
+    vendors: "Vendors",
+    categories: "Categories",
+    price: "Price",
+    distance: "Distance",
+    rating: "Rating",
+    loading: "Loading...",
+    noVendors: "No vendors available",
+
+    // Common
+    save: "Save",
+    cancel: "Cancel",
+    confirm: "Confirm",
+    ok: "OK",
+    close: "Close",
+    back: "Back",
+    error: "Error",
+    success: "Success",
+    loading_text: "Loading...",
+  },
+  ewe: {
+    // Login
+    continueWithGoogle: "Dzɔ kple Google",
+    termsAndPrivacy: "Ne èle ɖo, èxɔ mɔ ɖa meɖeɖeɖe kple mɔ dɔwɔwɔ.",
+
+    // Index/Home
+    go: "Go !",
+
+    // Settings/Param
+    parameters: "Nutata",
+    userMode: "Tasu Nutata",
+    client: "Kliyɛ",
+    delivery: "Ɖelu",
+    vendor: "Ƒu",
+    assistanceAndLegal: "Nudzedzɛ Kple Sɔ̃",
+    reportProblem: "ƒo Vevesese",
+    helpCenter: "Nudzedzɛ Ƒoƒo",
+    privacyAndSecurity: "Ŋkɔ kple Nutata",
+    language: "Bè",
+    french: "Fle",
+    english: "Ŋgŋlitfo",
+    ewe: "Eʋegbe",
+    actions: "Ŋutɔ",
+    logout: "ŋu Ade",
+    logoutError: "Hihi le ŋu Ade ŋu",
+
+    // Vendor Dashboard
+    newOrder: "Ɖesi Yeyea!",
+    newOrderReceived: "Ɖesi yeyea va.",
+    orders: "Ɖesi",
+    products: "Nutsukɔ",
+    settings: "Nutata",
+    ordersTab: "Ɖesi",
+    productsTab: "Nyui Nutsukɔ",
+    settingsTab: "Ƒu",
+    addProduct: "Nutsukɔ Zɔ",
+    editProduct: "Nutsukɔ Ame",
+    closeProduct: "Nutsukɔ Eme",
+    openProduct: "Nutsukɔ ŋu",
+    delete: "Sɔ",
+    accept: "Xɔ",
+    reject: "Dzu",
+    complete: "Dzɔ",
+    incomplete: "Nunana dzɔtɔ",
+    pleaseComplete: "Mejɔ ŋkɔ kple nutata Dzɔ kple vɔ.",
+    shopOpen: "Ƒu ŋu",
+    shopClosed: "Ƒu Eme",
+    errorUpdating: "Hihi",
+    errorUpdatingStatus: "Abe hã le nutata ŋu.",
+    open: "ŋu",
+    closed: "Eme",
+    reviews: "kpaɖuuid",
+    activeOrder: "Ɖesi Ŋutɔ",
+    askingConfirmation: "⏳ Ɖa Ŋutɔ",
+    orderAccepted: "✅ Ɖesi Xɔtɔ",
+    preparing: "👨‍🍳 ŋutɔ...",
+    readyForDelivery: "🍛 Ɖelu Ŋutɔ",
+    delivering: "🛵 Zɔ Ŋutɔ !",
+
+    // Accueil (Home page)
+    search: "Di",
+    vendors: "Ƒu",
+    categories: "Cegbeme",
+    price: "Vɔ",
+    distance: "Titina",
+    rating: "Ŋusẽ",
+    loading: "Ŋutɔ...",
+    noVendors: "Ƒu o le ŋu o",
+
+    // Common
+    save: "Zɔ",
+    cancel: "Dzu",
+    confirm: "Ɖa",
+    ok: "OK",
+    close: "Eme",
+    back: "Kuzi",
+    error: "Hihi",
+    success: "Ɖekɔe",
+    loading_text: "Ŋutɔ...",
+  },
+};
+
+export const useTranslation = (language: Language) => {
+  return {
+    t: (key: keyof typeof translations.fr): string => {
+      return (translations[language][key] || translations.fr[key]) as string;
+    },
+  };
+};

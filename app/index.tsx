@@ -1,11 +1,14 @@
-import "./globals.css";
-import { Text, View, Pressable, ImageBackground } from "react-native";
 import { Link } from "expo-router";
-import { StatusBar } from "expo-status-bar";
-import { Stack } from "expo-router";
-import React from "react";
+import React, { useContext } from "react";
+import { ImageBackground, Pressable, Text, View } from "react-native";
+import { useTranslation } from "../services/i18n";
+import { SettingsContext } from "./context/SettingsContext";
+import "./globals.css";
 
 export default function Index() {
+  const { language } = useContext(SettingsContext);
+  const { t } = useTranslation(language);
+
   return (
     <View className="flex-1 justify-center items-center bg-primary">
       <ImageBackground
@@ -17,7 +20,7 @@ export default function Index() {
 
       <Link href={"/splash/splash_1"} asChild>
         <Pressable className="items-center p-3 w-32 rounded-full shadow-md bg-tertiary mb-2">
-          <Text className="text-xl text-secondary">Go !</Text>
+          <Text className="text-xl text-secondary">{t("go")}</Text>
         </Pressable>
       </Link>
     </View>

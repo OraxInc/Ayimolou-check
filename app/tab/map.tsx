@@ -1,14 +1,27 @@
-import React, { useEffect, useRef, useState } from "react";
-import pack_food from "@/assets/food_pack";
+import { useUser } from "@clerk/clerk-expo";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import * as Location from "expo-location";
 import LottieView from "lottie-react-native";
-import { useAuth, useUser } from "@clerk/clerk-expo";
+import React, { useEffect, useRef, useState } from "react";
+import OrderConfirmationModal from "../../components/OrderConfirmationModal";
 import { useBackendApi } from "../../services/api";
 import { User } from "../../types/user";
-import OrderConfirmationModal from "../../components/OrderConfirmationModal";
 
+// helper to abbreviate vendor display name (e.g. "Assou prenom" → "A. prenom")
+const abbreviateName = (name: string) => {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length <= 1) return name;
+  const firstInitial = parts[0][0].toUpperCase() + ".";
+  return [firstInitial, ...parts.slice(1)].join(" ");
+};
+
+// optionally limit to a maximum length after abbreviation
+const truncate = (str: string, maxLen: number = 20) =>
+  str.length > maxLen ? str.slice(0, maxLen) : str;
+
+import { useRouter } from "expo-router";
 import {
+  ActivityIndicator,
   Alert,
   Dimensions,
   FlatList,
@@ -18,14 +31,12 @@ import {
   Modal,
   Pressable,
   StyleSheet,
+  Text,
   TextInput,
   View,
-  ActivityIndicator,
 } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Text } from "react-native";
-import { useRouter } from "expo-router";
 
 const { width, height } = Dimensions.get("window");
 const API_KEY = "714aaa82e8bf4eb5947edbaeb6aa19e6";
@@ -64,7 +75,10 @@ const HomeScreen = () => {
     setShowConfirmModal(true);
   };
 
-  const handleFinalConfirm = async (formattedAddress: string, paymentMethod: 'CASH' | 'MOBILE_MONEY') => {
+  const handleFinalConfirm = async (
+    formattedAddress: string,
+    paymentMethod: "CASH" | "MOBILE_MONEY",
+  ) => {
     const selected = packByVendor.filter((p) => p.selected);
     const currentVendor = vendors.find((v) => v.displayName === selectedCard);
     if (!currentVendor || !clerkUser) return;
@@ -85,10 +99,12 @@ const HomeScreen = () => {
       totalPrice: total,
       deliveryAddress: {
         address: formattedAddress,
-        coordinates: clientLocation ? {
-          latitude: clientLocation.latitude,
-          longitude: clientLocation.longitude
-        } : undefined
+        coordinates: clientLocation
+          ? {
+              latitude: clientLocation.latitude,
+              longitude: clientLocation.longitude,
+            }
+          : undefined,
       },
       paymentMethod,
     };
@@ -100,12 +116,12 @@ const HomeScreen = () => {
         setShowFoodAlert(false);
         setShowConfirmModal(false);
         // Réinitialiser la sélection
-        setPackByVendor(prev => prev.map(p => ({ ...p, selected: false })));
-        
+        setPackByVendor((prev) => prev.map((p) => ({ ...p, selected: false })));
+
         // Redirection vers le suivi
         router.push({
           pathname: "/tab/suivi_commande",
-          params: { orderId: result.id }
+          params: { orderId: result.id },
         });
       } else {
         Alert.alert("Erreur", "Impossible de créer la commande.");
@@ -265,7 +281,11 @@ const HomeScreen = () => {
                 >
                   <View className="w-50 h-50 mb-2 rounded-full bg-red-300 justify-center items-center flex-row">
                     <Image
-                      source={currentVendor.photoURL ? { uri: currentVendor.photoURL } : require("../../assets/images/profil_2.png")}
+                      source={
+                        currentVendor.photoURL
+                          ? { uri: currentVendor.photoURL }
+                          : require("../../assets/images/profil_2.png")
+                      }
                       style={{
                         width: 50,
                         height: 50,
@@ -295,7 +315,9 @@ const HomeScreen = () => {
                       style={[
                         styles.modalStatusText,
                         {
-                          color: currentVendor.vendorProfile?.isOpen ? "#34ab51" : "#D94343",
+                          color: currentVendor.vendorProfile?.isOpen
+                            ? "#34ab51"
+                            : "#D94343",
                         },
                       ]}
                     >
@@ -367,18 +389,21 @@ const HomeScreen = () => {
         region={userRegion}
         mapPadding={{ top: 0, right: 0, bottom: 360, left: 0 }}
       >
-        {vendors.map((vendor) => vendor.vendorProfile && (
-          <Marker
-            key={`${vendor.uid}-${selectedCard}`} // <-- clé dynamique ici
-            title={vendor.displayName}
-            coordinate={vendor.vendorProfile.coordinates}
-            image={
-              vendor.displayName === selectedCard
-                ? require("../../assets/images/pin_r.png")
-                : require("../../assets/images/pin.png")
-            }
-          />
-        ))}
+        {vendors.map(
+          (vendor) =>
+            vendor.vendorProfile && (
+              <Marker
+                key={`${vendor.uid}-${selectedCard}`} // <-- clé dynamique ici
+                title={abbreviateName(vendor.displayName)}
+                coordinate={vendor.vendorProfile.coordinates}
+                image={
+                  vendor.displayName === selectedCard
+                    ? require("../../assets/images/pin_r.png")
+                    : require("../../assets/images/pin.png")
+                }
+              />
+            ),
+        )}
 
         {routeCoords.length > 0 && (
           <Polyline
@@ -425,7 +450,9 @@ const HomeScreen = () => {
               height: height * 0.49, //hauteur conteneur des cardes vendeur un peu moins de la moitié
             }}
             columnWrapperStyle={{ gap: 10 }}
-            data={vendors.filter(v => v.role === 'vendeur' && v.vendorProfile)}
+            data={vendors.filter(
+              (v) => v.role === "vendeur" && v.vendorProfile,
+            )}
             keyExtractor={(item) => item.uid}
             renderItem={({ item: vendor }) => (
               <Pressable // card vendeur pour afficher le menu
@@ -435,18 +462,27 @@ const HomeScreen = () => {
                     const fetchVendorProducts = async () => {
                       setLoadingProducts(true);
                       try {
-                        const products = await getProducts({ vendorId: vendor.uid });
-                        setPackByVendor(products.map((p: any) => ({
-                          ...p,
-                          selected: false,
-                          image: p.imageUrl || "https://loremflickr.com/200/200/food",
-                          name_pack: p.name,
-                          prix: p.price,
-                          quantité: 1
-                        })));
+                        const products = await getProducts({
+                          vendorId: vendor.uid,
+                        });
+                        setPackByVendor(
+                          products.map((p: any) => ({
+                            ...p,
+                            selected: false,
+                            image:
+                              p.imageUrl ||
+                              "https://loremflickr.com/200/200/food",
+                            name_pack: p.name,
+                            prix: p.price,
+                            quantité: 1,
+                          })),
+                        );
                         setShowFoodAlert(true);
                       } catch (error) {
-                        console.error("Error fetching map vendor products:", error);
+                        console.error(
+                          "Error fetching map vendor products:",
+                          error,
+                        );
                       } finally {
                         setLoadingProducts(false);
                       }
@@ -458,11 +494,14 @@ const HomeScreen = () => {
                   setSelectedCard(vendor.displayName);
                   if (vendor.vendorProfile) {
                     setDestination(vendor.vendorProfile.coordinates);
-                    mapRef.current?.animateToRegion({
-                      ...vendor.vendorProfile.coordinates,
-                      latitudeDelta: 0.008,
-                      longitudeDelta: 0.008,
-                    }, 1000);
+                    mapRef.current?.animateToRegion(
+                      {
+                        ...vendor.vendorProfile.coordinates,
+                        latitudeDelta: 0.008,
+                        longitudeDelta: 0.008,
+                      },
+                      1000,
+                    );
                   }
                 }}
                 style={
@@ -472,7 +511,11 @@ const HomeScreen = () => {
                 }
               >
                 <Image
-                  source={vendor.vendorProfile?.imageUrl ? { uri: vendor.vendorProfile.imageUrl } : { uri: "https://loremflickr.com/320/240/restaurant" }}
+                  source={
+                    vendor.vendorProfile?.imageUrl
+                      ? { uri: vendor.vendorProfile.imageUrl }
+                      : { uri: "https://loremflickr.com/320/240/restaurant" }
+                  }
                   style={styles.markerImage}
                 />
 
@@ -485,19 +528,23 @@ const HomeScreen = () => {
                         name="user-check"
                         size={18}
                         color={
-                          vendor.displayName === selectedCard ? "#FFF200" : "#333"
+                          vendor.displayName === selectedCard
+                            ? "#FFF200"
+                            : "#333"
                         }
                         style={{ marginRight: 8 }}
                       />
 
                       <Text
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
                         style={
                           vendor.displayName === selectedCard
                             ? styles.activeMarkerName
                             : styles.markerName
                         }
                       >
-                        {vendor.displayName}
+                        {truncate(abbreviateName(vendor.displayName), 15)}
                       </Text>
                     </View>
 
@@ -514,7 +561,11 @@ const HomeScreen = () => {
                         {Array.from({ length: 5 }).map((_, index) => (
                           <FontAwesome
                             key={index}
-                            name={index < (vendor.vendorProfile?.rating || 0) ? "star" : "star-o"}
+                            name={
+                              index < (vendor.vendorProfile?.rating || 0)
+                                ? "star"
+                                : "star-o"
+                            }
                             size={14}
                             color={
                               vendor.displayName === selectedCard
@@ -522,7 +573,8 @@ const HomeScreen = () => {
                                 : "#000000"
                             }
                             style={{
-                              opacity: vendor.displayName === selectedCard ? 1 : 0.7,
+                              opacity:
+                                vendor.displayName === selectedCard ? 1 : 0.7,
                             }}
                           />
                         ))}
@@ -571,17 +623,15 @@ const HomeScreen = () => {
         onClose={() => setShowConfirmModal(false)}
         onConfirm={handleFinalConfirm}
         items={packByVendor
-          .filter(p => p.selected)
-          .map(p => ({ 
-            name: p.name_pack, 
-            price: p.prix, 
-            quantity: 1 
-          }))
-        }
+          .filter((p) => p.selected)
+          .map((p) => ({
+            name: p.name_pack,
+            price: p.prix,
+            quantity: 1,
+          }))}
         totalPrice={packByVendor
-          .filter(p => p.selected)
-          .reduce((sum, p) => sum + p.prix, 0)
-        }
+          .filter((p) => p.selected)
+          .reduce((sum, p) => sum + p.prix, 0)}
         initialLocation={clientLocation}
         loading={isOrdering}
       />

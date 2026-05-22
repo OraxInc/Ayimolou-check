@@ -153,6 +153,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'flex-end',
+    marginBottom: 17,
   },
   container: {
     backgroundColor: '#fff',
@@ -168,7 +169,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
+    marginLeft: 54,
     fontWeight: '700',
     color: '#000',
   },
@@ -176,7 +178,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 14,
+    textAlign: 'center',
+    fontSize: 12,
     fontWeight: '700',
     color: '#666',
     textTransform: 'uppercase',
@@ -189,11 +192,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   itemName: {
-    fontSize: 16,
+    fontSize: 12.8,
     color: '#333',
   },
   itemPrice: {
-    fontSize: 16,
+    fontSize: 12.8,
     fontWeight: '600',
     color: '#000',
   },
@@ -208,12 +211,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   totalLabel: {
-    fontSize: 18,
+    fontSize: 14.4,
     fontWeight: '700',
     color: '#000',
   },
   totalValue: {
-    fontSize: 22,
+    fontSize: 17.6,
     fontWeight: '800',
     color: '#d63031',
   },
@@ -221,10 +224,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
-    borderRadius: 12,
+    borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    borderWidth: 1,
     borderColor: '#eee',
   },
   inputIcon: {
@@ -232,7 +234,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: 12.8,
     color: '#000',
     minHeight: 40,
   },
@@ -240,7 +242,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   hint: {
-    fontSize: 12,
+    fontSize: 9.6,
     color: '#999',
     marginTop: 8,
     fontStyle: 'italic',
@@ -258,7 +260,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
   },
   confirmText: {
-    fontSize: 16,
+    fontSize: 12.8,
     fontWeight: '700',
     color: '#000',
   },
@@ -284,7 +286,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFC700',
   },
   paymentText: {
-    fontSize: 14,
+    fontSize: 11.2,
     fontWeight: '600',
     color: '#666',
   },

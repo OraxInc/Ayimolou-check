@@ -1,27 +1,29 @@
-import React, { useEffect, useState, useRef } from "react";
+import { useUser } from "@clerk/clerk-expo";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  StyleSheet,
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
   FlatList,
   Image,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
   Modal,
   ScrollView,
-  Pressable,
-  Animated,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from '@expo/vector-icons';
-import { useUser } from "@clerk/clerk-expo";
-import { useBackendApi } from "../../services/api";
-import { Dimensions, Alert } from "react-native";
-import * as Location from 'expo-location';
 import OrderConfirmationModal from "../../components/OrderConfirmationModal";
-import { useRouter, useFocusEffect } from "expo-router";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useBackendApi } from "../../services/api";
+import { useTranslation } from "../../services/i18n";
+import { SettingsContext } from "../context/SettingsContext";
 
 const { width, height } = Dimensions.get("window");
 
@@ -40,46 +42,68 @@ type Seller = {
   imageUrl?: string;
 };
 
-const ACTIVE_ORDER_KEY = 'activeOrderId';
-const ACTIVE_ORDER_STATUS_KEY = 'activeOrderStatus';
-const TERMINAL_STATUSES = ['COMPLETED', 'CANCELLED'];
+const ACTIVE_ORDER_KEY = "activeOrderId";
+const ACTIVE_ORDER_STATUS_KEY = "activeOrderStatus";
+const TERMINAL_STATUSES = ["COMPLETED", "CANCELLED"];
 
 export default function AccueilScreen() {
   const { user: clerkUser } = useUser();
   const router = useRouter();
+  const { language } = useContext(SettingsContext);
+  const { t } = useTranslation(language);
   const [search, setSearch] = useState("");
   const [vendors, setVendors] = useState<Seller[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [vendorProducts, setVendorProducts] = useState<any[]>([]);
-  const [selectedItems, setSelectedItems] = useState<Record<string, number>>({});
+  const [selectedItems, setSelectedItems] = useState<Record<string, number>>(
+    {},
+  );
   const [loading, setLoading] = useState(true);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<Seller | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [clientLocation, setClientLocation] = useState<{ latitude: number, longitude: number } | null>(null);
+  const [clientLocation, setClientLocation] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
   const [isOrdering, setIsOrdering] = useState(false);
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
-  const [activeOrderStatus, setActiveOrderStatus] = useState<string>('');
+  const [activeOrderStatus, setActiveOrderStatus] = useState<string>("");
   const bannerAnim = useRef(new Animated.Value(0)).current;
-  const { getVendors, getCategories, getProducts, createOrder, getMyOrders } = useBackendApi();
+  const { getVendors, getCategories, getProducts, createOrder, getMyOrders } =
+    useBackendApi();
 
   // ─── Charger la commande active depuis AsyncStorage ──────────────
   const loadActiveOrder = async () => {
     try {
       const savedOrderId = await AsyncStorage.getItem(ACTIVE_ORDER_KEY);
       const savedStatus = await AsyncStorage.getItem(ACTIVE_ORDER_STATUS_KEY);
-      if (savedOrderId && savedStatus && !TERMINAL_STATUSES.includes(savedStatus)) {
+      if (
+        savedOrderId &&
+        savedStatus &&
+        !TERMINAL_STATUSES.includes(savedStatus)
+      ) {
         setActiveOrderId(savedOrderId);
         setActiveOrderStatus(savedStatus);
         // Animate banner in
-        Animated.spring(bannerAnim, { toValue: 1, useNativeDriver: true }).start();
-      } else if (savedOrderId && savedStatus && TERMINAL_STATUSES.includes(savedStatus)) {
+        Animated.spring(bannerAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+        }).start();
+      } else if (
+        savedOrderId &&
+        savedStatus &&
+        TERMINAL_STATUSES.includes(savedStatus)
+      ) {
         // Commande terminée, nettoyer
-        await AsyncStorage.multiRemove([ACTIVE_ORDER_KEY, ACTIVE_ORDER_STATUS_KEY]);
+        await AsyncStorage.multiRemove([
+          ACTIVE_ORDER_KEY,
+          ACTIVE_ORDER_STATUS_KEY,
+        ]);
       }
     } catch (e) {
-      console.error('Error loading active order:', e);
+      console.error("Error loading active order:", e);
     }
   };
 
@@ -87,7 +111,7 @@ export default function AccueilScreen() {
   useFocusEffect(
     React.useCallback(() => {
       loadActiveOrder();
-    }, [])
+    }, []),
   );
 
   useEffect(() => {
@@ -96,9 +120,9 @@ export default function AccueilScreen() {
         setLoading(true);
         const [vendorsData, categoriesData] = await Promise.all([
           getVendors(),
-          getCategories()
+          getCategories(),
         ]);
-        
+
         const mappedVendors: Seller[] = vendorsData.map((v: any) => ({
           id: v.uid,
           name: v.vendorProfile?.shopName || v.displayName || "Revendeuse",
@@ -109,7 +133,8 @@ export default function AccueilScreen() {
           specialty: v.vendorProfile?.specialty || ["Ayimolou"],
           price: "à partir de 500 FCFA",
           avatar: v.photoURL || "https://i.pravatar.cc/150?u=" + v.uid,
-          description: v.vendorProfile?.description || "Pas de description disponible.",
+          description:
+            v.vendorProfile?.description || "Pas de description disponible.",
           phoneNumber: v.phoneNumber,
           imageUrl: v.vendorProfile?.imageUrl,
         }));
@@ -127,11 +152,13 @@ export default function AccueilScreen() {
     // Get location for delivery address
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status === 'granted') {
-        const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+      if (status === "granted") {
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
         setClientLocation({
           latitude: location.coords.latitude,
-          longitude: location.coords.longitude
+          longitude: location.coords.longitude,
         });
       }
     })();
@@ -157,8 +184,8 @@ export default function AccueilScreen() {
   }, [selectedVendor?.id]);
 
   const renderItem = ({ item }: { item: Seller }) => (
-    <TouchableOpacity 
-      style={styles.card} 
+    <TouchableOpacity
+      style={styles.card}
       onPress={() => setSelectedVendor(item)}
       activeOpacity={0.7}
     >
@@ -182,7 +209,9 @@ export default function AccueilScreen() {
           <View
             style={[
               styles.statusDot,
-              { backgroundColor: item.status === "open" ? "#2ecc71" : "#e74c3c" },
+              {
+                backgroundColor: item.status === "open" ? "#2ecc71" : "#e74c3c",
+              },
             ]}
           />
           <Text
@@ -190,7 +219,7 @@ export default function AccueilScreen() {
               color: item.status === "open" ? "#2ecc71" : "#e74c3c",
             }}
           >
-            {item.status === "open" ? "Ouvert" : "Fermé"}
+            {item.status === "open" ? t("open") : t("closed")}
           </Text>
         </View>
 
@@ -213,11 +242,11 @@ export default function AccueilScreen() {
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
-      PENDING: '⏳ En attente de confirmation',
-      ACCEPTED: '✅ Commande acceptée',
-      PREPARING: '👨‍🍳 En préparation...',
-      READY: '🍛 Prête à être livrée',
-      DELIVERING: '🛵 En livraison !',
+      PENDING: t("askingConfirmation"),
+      ACCEPTED: t("orderAccepted"),
+      PREPARING: t("preparing"),
+      READY: t("readyForDelivery"),
+      DELIVERING: t("delivering"),
     };
     return labels[status] || `📦 ${status}`;
   };
@@ -226,20 +255,38 @@ export default function AccueilScreen() {
     <SafeAreaView style={styles.container} className="p-12">
       {/* Bannière Commande Active */}
       {activeOrderId && (
-        <Animated.View style={[
-          styles.activeBanner,
-          { transform: [{ translateY: bannerAnim.interpolate({ inputRange: [0, 1], outputRange: [-80, 0] }) }] }
-        ]}>
+        <Animated.View
+          style={[
+            styles.activeBanner,
+            {
+              transform: [
+                {
+                  translateY: bannerAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [-80, 0],
+                  }),
+                },
+              ],
+            },
+          ]}
+        >
           <TouchableOpacity
             style={styles.activeBannerContent}
-            onPress={() => router.push({ pathname: '/tab/suivi_commande', params: { orderId: activeOrderId } })}
+            onPress={() =>
+              router.push({
+                pathname: "/tab/suivi_commande",
+                params: { orderId: activeOrderId },
+              })
+            }
           >
             <View style={styles.bannerPulse}>
               <View style={styles.bannerDot} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={styles.bannerTitle}>Commande en cours</Text>
-              <Text style={styles.bannerStatus}>{getStatusLabel(activeOrderStatus)}</Text>
+              <Text style={styles.bannerTitle}>{t("activeOrder")}</Text>
+              <Text style={styles.bannerStatus}>
+                {getStatusLabel(activeOrderStatus)}
+              </Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color="#000" />
           </TouchableOpacity>
@@ -259,20 +306,38 @@ export default function AccueilScreen() {
 
       {/* Filters */}
       <View style={styles.filters}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-          <TouchableOpacity 
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 10 }}
+        >
+          <TouchableOpacity
             style={!activeCategory ? styles.activeFilter : styles.filter}
             onPress={() => setActiveCategory(null)}
           >
-            <Text style={!activeCategory ? styles.activeText : styles.filterText}>Toutes</Text>
+            <Text
+              style={!activeCategory ? styles.activeText : styles.filterText}
+            >
+              Toutes
+            </Text>
           </TouchableOpacity>
           {categories.map((cat) => (
-            <TouchableOpacity 
-              key={cat.id} 
-              style={activeCategory === cat.id ? styles.activeFilter : styles.filter}
+            <TouchableOpacity
+              key={cat.id}
+              style={
+                activeCategory === cat.id ? styles.activeFilter : styles.filter
+              }
               onPress={() => setActiveCategory(cat.id)}
             >
-              <Text style={activeCategory === cat.id ? styles.activeText : styles.filterText}>{cat.name}</Text>
+              <Text
+                style={
+                  activeCategory === cat.id
+                    ? styles.activeText
+                    : styles.filterText
+                }
+              >
+                {cat.name}
+              </Text>
             </TouchableOpacity>
           ))}
         </ScrollView>
@@ -280,14 +345,19 @@ export default function AccueilScreen() {
 
       {/* List */}
       {loading ? (
-        <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <View
+          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        >
           <ActivityIndicator size="large" color="#000" />
         </View>
       ) : (
         <FlatList
-          data={vendors.filter(v => 
-            (!activeCategory || v.specialty.includes(activeCategory) || (v as any).categoryId === activeCategory) &&
-            (v.name.toLowerCase().includes(search.toLowerCase()))
+          data={vendors.filter(
+            (v) =>
+              (!activeCategory ||
+                v.specialty.includes(activeCategory) ||
+                (v as any).categoryId === activeCategory) &&
+              v.name.toLowerCase().includes(search.toLowerCase()),
           )}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
@@ -312,7 +382,7 @@ export default function AccueilScreen() {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <View style={styles.modalHandle} />
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setSelectedVendor(null)}
               >
@@ -322,14 +392,18 @@ export default function AccueilScreen() {
 
             {selectedVendor && (
               <ScrollView showsVerticalScrollIndicator={false}>
-                <Image 
-                  source={{ uri: selectedVendor.imageUrl || selectedVendor.avatar }} 
-                  style={styles.modalImage} 
+                <Image
+                  source={{
+                    uri: selectedVendor.imageUrl || selectedVendor.avatar,
+                  }}
+                  style={styles.modalImage}
                 />
-                
+
                 <View style={styles.modalInfoContainer}>
-                  <Text style={styles.modalShopName}>{selectedVendor.name}</Text>
-                  
+                  <Text style={styles.modalShopName}>
+                    {selectedVendor.name}
+                  </Text>
+
                   <View style={styles.modalSubHeader}>
                     <View style={styles.rating}>
                       <Ionicons name="star" size={18} color="#FFD700" />
@@ -337,15 +411,19 @@ export default function AccueilScreen() {
                         {selectedVendor.rating} ({selectedVendor.reviews} avis)
                       </Text>
                     </View>
-                    <Text style={styles.modalDistance}>{selectedVendor.distance}</Text>
+                    <Text style={styles.modalDistance}>
+                      {selectedVendor.distance}
+                    </Text>
                   </View>
 
                   <View style={styles.specialtyContainer}>
-                    {selectedVendor.specialty.map((tag: string, idx: number) => (
-                      <View key={idx} style={styles.tag}>
-                        <Text style={styles.tagText}>{tag}</Text>
-                      </View>
-                    ))}
+                    {selectedVendor.specialty.map(
+                      (tag: string, idx: number) => (
+                        <View key={idx} style={styles.tag}>
+                          <Text style={styles.tagText}>{tag}</Text>
+                        </View>
+                      ),
+                    )}
                   </View>
 
                   <View style={styles.section}>
@@ -355,44 +433,69 @@ export default function AccueilScreen() {
                     ) : vendorProducts.length > 0 ? (
                       <View style={styles.productsGrid}>
                         {vendorProducts.map((product) => (
-                          <TouchableOpacity 
-                            key={product.id} 
+                          <TouchableOpacity
+                            key={product.id}
                             style={[
                               styles.productCard,
-                              selectedItems[product.id] ? styles.productCardSelected : null
+                              selectedItems[product.id]
+                                ? styles.productCardSelected
+                                : null,
                             ]}
                             onPress={() => {
-                              setSelectedItems(prev => ({
+                              setSelectedItems((prev) => ({
                                 ...prev,
-                                [product.id]: prev[product.id] ? 0 : 1
+                                [product.id]: prev[product.id] ? 0 : 1,
                               }));
                             }}
                           >
-                            <Image 
-                              source={product.imageUrl ? { uri: product.imageUrl } : { uri: "https://loremflickr.com/200/200/food" }} 
-                              style={styles.productImage} 
+                            <Image
+                              source={
+                                product.imageUrl
+                                  ? { uri: product.imageUrl }
+                                  : {
+                                      uri: "https://loremflickr.com/200/200/food",
+                                    }
+                              }
+                              style={styles.productImage}
                             />
-                            <Text style={styles.productName}>{product.name}</Text>
-                            <Text style={styles.productPrice}>{product.price} F</Text>
+                            <Text style={styles.productName}>
+                              {product.name}
+                            </Text>
+                            <Text style={styles.productPrice}>
+                              {product.price} F
+                            </Text>
                             {selectedItems[product.id] > 0 && (
                               <View style={styles.checkBadge}>
-                                <Ionicons name="checkmark-circle" size={20} color="#00b894" />
+                                <Ionicons
+                                  name="checkmark-circle"
+                                  size={20}
+                                  color="#00b894"
+                                />
                               </View>
                             )}
                           </TouchableOpacity>
                         ))}
                       </View>
                     ) : (
-                      <Text style={styles.sectionContent}>Aucun produit disponible pour le moment.</Text>
+                      <Text style={styles.sectionContent}>
+                        Aucun produit disponible pour le moment.
+                      </Text>
                     )}
                   </View>
 
-                  {Object.values(selectedItems).some(qty => qty > 0) && (
-                    <TouchableOpacity 
+                  {Object.values(selectedItems).some((qty) => qty > 0) && (
+                    <TouchableOpacity
                       style={styles.orderButton}
                       onPress={() => setShowConfirmModal(true)}
                     >
-                      <Text style={styles.orderButtonText}>Commander ({Object.values(selectedItems).filter(qty => qty > 0).length} articles)</Text>
+                      <Text style={styles.orderButtonText}>
+                        Commander (
+                        {
+                          Object.values(selectedItems).filter((qty) => qty > 0)
+                            .length
+                        }{" "}
+                        articles)
+                      </Text>
                     </TouchableOpacity>
                   )}
 
@@ -401,17 +504,20 @@ export default function AccueilScreen() {
                     onClose={() => setShowConfirmModal(false)}
                     onConfirm={async (formattedAddress, paymentMethod) => {
                       if (!clerkUser || !selectedVendor) return;
-                      
+
                       const items = vendorProducts
-                        .filter(p => selectedItems[p.id] > 0)
-                        .map(p => ({
+                        .filter((p) => selectedItems[p.id] > 0)
+                        .map((p) => ({
                           productId: p.id,
                           name: p.name,
                           price: p.price,
-                          quantity: selectedItems[p.id]
+                          quantity: selectedItems[p.id],
                         }));
 
-                      const total = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+                      const total = items.reduce(
+                        (sum, item) => sum + item.price * item.quantity,
+                        0,
+                      );
 
                       try {
                         setIsOrdering(true);
@@ -422,18 +528,27 @@ export default function AccueilScreen() {
                           totalPrice: total,
                           deliveryAddress: {
                             address: formattedAddress,
-                            coordinates: clientLocation || undefined
+                            coordinates: clientLocation || undefined,
                           },
                           paymentMethod, // Added this field
                         });
 
                         if (result && result.id) {
                           // Sauvegarder la commande active
-                          await AsyncStorage.setItem(ACTIVE_ORDER_KEY, result.id);
-                          await AsyncStorage.setItem(ACTIVE_ORDER_STATUS_KEY, 'PENDING');
+                          await AsyncStorage.setItem(
+                            ACTIVE_ORDER_KEY,
+                            result.id,
+                          );
+                          await AsyncStorage.setItem(
+                            ACTIVE_ORDER_STATUS_KEY,
+                            "PENDING",
+                          );
                           setActiveOrderId(result.id);
-                          setActiveOrderStatus('PENDING');
-                          Animated.spring(bannerAnim, { toValue: 1, useNativeDriver: true }).start();
+                          setActiveOrderStatus("PENDING");
+                          Animated.spring(bannerAnim, {
+                            toValue: 1,
+                            useNativeDriver: true,
+                          }).start();
 
                           setSelectedItems({});
                           setSelectedVendor(null);
@@ -441,23 +556,31 @@ export default function AccueilScreen() {
                           // Redirection vers l'écran de suivi
                           router.push({
                             pathname: "/tab/suivi_commande",
-                            params: { orderId: result.id }
+                            params: { orderId: result.id },
                           });
                         }
                       } catch (error) {
-                        Alert.alert("Erreur", "Impossible de passer la commande.");
+                        Alert.alert(
+                          "Erreur",
+                          "Impossible de passer la commande.",
+                        );
                       } finally {
                         setIsOrdering(false);
                       }
                     }}
                     items={vendorProducts
-                      .filter(p => selectedItems[p.id] > 0)
-                      .map(p => ({ name: p.name, price: p.price, quantity: selectedItems[p.id] }))
-                    }
+                      .filter((p) => selectedItems[p.id] > 0)
+                      .map((p) => ({
+                        name: p.name,
+                        price: p.price,
+                        quantity: selectedItems[p.id],
+                      }))}
                     totalPrice={vendorProducts
-                      .filter(p => selectedItems[p.id] > 0)
-                      .reduce((sum, p) => sum + (p.price * selectedItems[p.id]), 0)
-                    }
+                      .filter((p) => selectedItems[p.id] > 0)
+                      .reduce(
+                        (sum, p) => sum + p.price * selectedItems[p.id],
+                        0,
+                      )}
                     initialLocation={clientLocation}
                     loading={isOrdering}
                   />
@@ -465,13 +588,17 @@ export default function AccueilScreen() {
                   <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Horaires</Text>
                     <Text style={styles.sectionContent}>
-                      {selectedVendor.status === 'open' ? '🟢 Ouvert actuellement' : '🔴 Fermé actuellement'}
+                      {selectedVendor.status === "open"
+                        ? "🟢 Ouvert actuellement"
+                        : "🔴 Fermé actuellement"}
                     </Text>
                   </View>
 
                   <TouchableOpacity style={styles.contactButton}>
                     <Ionicons name="call" size={20} color="#000" />
-                    <Text style={styles.contactButtonText}>Contacter la revendeuse</Text>
+                    <Text style={styles.contactButtonText}>
+                      Contacter la revendeuse
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </ScrollView>
@@ -487,7 +614,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#ffcc00ff",
-    paddingHorizontal: 16,
+    paddingHorizontal: 18,
   },
 
   searchBox: {
@@ -497,7 +624,6 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     paddingHorizontal: 16,
     paddingVertical: 10,
-    marginTop: 12,
   },
 
   input: {
@@ -606,36 +732,37 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
+    marginBottom: 17,
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderTopLeftRadius: 32,
     borderTopRightRadius: 32,
     height: height * 0.85,
     paddingTop: 8,
   },
   modalHeader: {
-    alignItems: 'center',
+    alignItems: "center",
     paddingVertical: 12,
   },
   modalHandle: {
     width: 40,
     height: 4,
-    backgroundColor: '#ddd',
-    borderRadius: 2,
+    backgroundColor: "#ddd",
+    borderRadius: 100,
   },
   closeButton: {
-    position: 'absolute',
-    right: 20,
-    top: 10,
-    backgroundColor: '#f5f5f5',
-    padding: 8,
+    position: "absolute",
+    right: 18,
+    top: 5,
+    backgroundColor: "#f5f5f5",
+    padding: 2,
     borderRadius: 20,
   },
   modalImage: {
-    width: '100%',
+    marginTop: 10,
+    width: "100%",
     height: 250,
   },
   modalInfoContainer: {
@@ -643,116 +770,115 @@ const styles = StyleSheet.create({
   },
   modalShopName: {
     fontSize: 28,
-    fontWeight: '800',
-    color: '#000',
+    fontWeight: "800",
+    color: "#000",
     marginBottom: 8,
   },
   modalSubHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 20,
   },
   modalRatingText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 6,
   },
   modalDistance: {
     fontSize: 16,
-    color: '#666',
-    fontWeight: '500',
+    color: "#666",
+    fontWeight: "500",
   },
   specialtyContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 8,
     marginBottom: 24,
   },
   tag: {
-    backgroundColor: '#ffcc00ff',
+    backgroundColor: "#ffcc00ff",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
   },
   tagText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#000',
+    fontWeight: "600",
+    color: "#000",
   },
   section: {
     marginBottom: 24,
   },
   sectionTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
     marginBottom: 8,
-    color: '#000',
+    color: "#000",
   },
   sectionContent: {
     fontSize: 15,
-    color: '#444',
+    color: "#444",
     lineHeight: 22,
   },
   productsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
   },
   productCard: {
     width: (width - 64) / 2, // Adjusted for padding
-    backgroundColor: '#f9f9f9',
+    backgroundColor: "#f9f9f9",
     borderRadius: 12,
     padding: 8,
-    alignItems: 'center',
-    position: 'relative',
+    alignItems: "center",
+    position: "relative",
     borderWidth: 1,
-    borderColor: 'transparent',
+    borderColor: "transparent",
   },
   productCardSelected: {
-    borderColor: '#00b894',
-    backgroundColor: '#ebfffa',
+    borderColor: "#00b894",
+    backgroundColor: "#ebfffa",
   },
   checkBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: 5,
     right: 5,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 10,
   },
   orderButton: {
-    backgroundColor: '#000',
+    backgroundColor: "#000",
     padding: 16,
     borderRadius: 12,
     marginTop: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   orderButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   productImage: {
-    width: '100%',
-    height: 80,
-    borderRadius: 8,
+    width: "100%",
+    height: 110,
     marginBottom: 6,
   },
   productName: {
     fontSize: 13,
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
   },
   productPrice: {
     fontSize: 12,
-    color: '#a90808',
-    fontWeight: '700',
+    color: "#a90808",
+    fontWeight: "700",
   },
   contactButton: {
-    backgroundColor: '#ffcc00ff',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#ffcc00ff",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 16,
     borderRadius: 16,
     gap: 12,
@@ -761,50 +887,50 @@ const styles = StyleSheet.create({
   },
   contactButtonText: {
     fontSize: 16,
-    fontWeight: '700',
-    color: '#000',
+    fontWeight: "700",
+    color: "#000",
   },
   activeBanner: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 16,
     marginBottom: 10,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.12,
     shadowRadius: 8,
     elevation: 6,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   activeBannerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 14,
     gap: 12,
     borderLeftWidth: 4,
-    borderLeftColor: '#FFC700',
+    borderLeftColor: "#FFC700",
   },
   bannerPulse: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#fff7e0',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff7e0",
+    alignItems: "center",
+    justifyContent: "center",
   },
   bannerDot: {
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: '#FFC700',
+    backgroundColor: "#FFC700",
   },
   bannerTitle: {
     fontSize: 14,
-    fontWeight: '800',
-    color: '#2d3436',
+    fontWeight: "800",
+    color: "#2d3436",
   },
   bannerStatus: {
     fontSize: 12,
-    color: '#636e72',
+    color: "#636e72",
     marginTop: 2,
   },
 });

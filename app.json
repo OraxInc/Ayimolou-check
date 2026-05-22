@@ -16,7 +16,9 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "yellow"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      // allow HTTP (cleartext) traffic for local development
+      "usesCleartextTraffic": true
     },
     "web": {
       "bundler": "metro",
