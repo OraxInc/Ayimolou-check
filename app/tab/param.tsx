@@ -5,6 +5,7 @@ import React, { useContext, useState } from "react";
 import {
   Modal,
   ScrollView,
+  StyleSheet,
   Switch,
   Text,
   TouchableOpacity,
@@ -112,117 +113,99 @@ export default function ParamScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-primary pt-12">
-      {/* Header */}
-      <View className="flex-row items-center px-4 py-4 border-b border-gray-200">
-        <TouchableOpacity onPress={() => router.back()}>
+    <SafeAreaView style={styles.container} className="bg-primary mt-12">
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text className="text-xl font-bold ml-4">{t("parameters")}</Text>
+        <Text style={styles.headerTitle}>{t("parameters")}</Text>
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} className="flex-1">
-        {/* Compte Section */}
-        <View className="mt-6 px-4 mb-2">
-          <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-            {t("userMode")}
-          </Text>
-        </View>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        <Text style={styles.section}>{t("userMode").toUpperCase()}</Text>
 
-        <View className="mx-4 overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100">
-          <SwitchItem
-            icon="person-outline"
-            label={t("client")}
-            value={isClient}
-            onValueChange={handleClientChange}
-          />
-          <SwitchItem
-            icon="car-outline"
-            label={t("delivery")}
-            value={isLivreur}
-            onValueChange={handleLivreurChange}
-          />
-          <SwitchItem
-            icon="storefront-outline"
-            label={t("vendor")}
-            value={isVendeur}
-            onValueChange={handleVendeurChange}
-          />
-        </View>
+        <SwitchItem
+          icon="person-outline"
+          label={t("client")}
+          value={isClient}
+          onValueChange={handleClientChange}
+        />
+        <SwitchItem
+          icon="lock-closed-outline"
+          label={t("delivery")}
+          value={isLivreur}
+          onValueChange={handleLivreurChange}
+        />
+        <SwitchItem
+          icon="storefront-outline"
+          label={t("vendor")}
+          value={isVendeur}
+          onValueChange={handleVendeurChange}
+        />
 
-        {/* Assistance Section */}
-        <View className="mt-8 px-4 mb-2">
-          <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-            {t("assistanceAndLegal")}
-          </Text>
-        </View>
+        <Text style={styles.section}>{t("assistanceAndLegal").toUpperCase()}</Text>
 
-        <View className="mx-4 overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100">
-          <SettingItem
-            icon="alert-circle-outline"
-            label={t("reportProblem")}
-            onPress={() => {}}
-          />
-          <SettingItem
-            icon="help-circle-outline"
-            label={t("helpCenter")}
-            onPress={() => {}}
-          />
-          <SettingItem
-            icon="shield-checkmark-outline"
-            label={t("privacyAndSecurity")}
-            onPress={() => {}}
-          />
-          <SettingItem
-            icon="language-outline"
-            label={t("language")}
-            value={getLanguageDisplayName(language)}
-            onPress={() => setShowLanguageModal(true)}
-          />
-        </View>
+        <SettingItem
+          icon="alert-circle-outline"
+          label={t("reportProblem")}
+          onPress={() => {}}
+        />
+        <SettingItem
+          icon="help-circle-outline"
+          label={t("helpCenter")}
+          onPress={() => {}}
+        />
+        <SettingItem
+          icon="shield-checkmark-outline"
+          label={t("privacyAndSecurity")}
+          onPress={() => {}}
+        />
+        <SettingItem
+          icon="language-outline"
+          label={t("language")}
+          value={getLanguageDisplayName(language)}
+          onPress={() => setShowLanguageModal(true)}
+        />
 
-        {/* Action Section */}
-        <View className="mt-8 px-4 mb-2">
-          <Text className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-            {t("actions")}
-          </Text>
-        </View>
+        <Text style={styles.section}>{t("actions").toUpperCase()}</Text>
 
-        <View className="mx-4 overflow-hidden rounded-2xl bg-white shadow-sm border border-gray-100 mb-10">
-          <SettingItem
-            icon="log-out-outline"
-            label={t("logout")}
-            onPress={handleLogout}
-            textColor="text-red-500"
-          />
-        </View>
+        <SettingItem
+          icon="log-out-outline"
+          label={t("logout")}
+          onPress={handleLogout}
+          textColor="#d63031"
+        />
       </ScrollView>
 
-      {/* Language Selection Modal */}
       <Modal
         visible={showLanguageModal}
         onRequestClose={() => setShowLanguageModal(false)}
         transparent
         animationType="slide"
       >
-        <SafeAreaView className="flex-1 bg-white">
-          <View className="flex-row items-center px-4 py-4 border-b border-gray-200">
-            <TouchableOpacity onPress={() => setShowLanguageModal(false)}>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => setShowLanguageModal(false)}
+              activeOpacity={0.7}
+            >
               <Ionicons name="close" size={24} color="#000" />
             </TouchableOpacity>
-            <Text className="text-xl font-bold ml-4">{t("language")}</Text>
+            <Text style={styles.headerTitle}>{t("language")}</Text>
           </View>
 
-          <View className="flex-1">
+          <View>
             {(["fr", "en", "ewe"] as Language[]).map((lang) => (
               <TouchableOpacity
                 key={lang}
-                className="flex-row items-center justify-between py-4 px-4 border-b border-gray-100"
+                style={styles.item}
                 onPress={() => handleLanguageChange(lang)}
+                activeOpacity={0.7}
               >
-                <Text className="text-base font-medium text-black">
-                  {getLanguageDisplayName(lang)}
-                </Text>
+                <Text style={styles.itemText}>{getLanguageDisplayName(lang)}</Text>
                 {language === lang && (
                   <Ionicons name="checkmark" size={24} color="#ffd000" />
                 )}
@@ -240,7 +223,7 @@ const SettingItem = ({
   label,
   value,
   onPress,
-  textColor = "text-black",
+  textColor = "#000",
 }: {
   icon: keyof typeof Ionicons.glyphMap;
   label: string;
@@ -249,18 +232,16 @@ const SettingItem = ({
   textColor?: string;
 }) => (
   <TouchableOpacity
-    className="flex-row items-center justify-between py-4 px-4 border-b border-gray-100 bg-white"
+    style={styles.item}
     activeOpacity={onPress ? 0.7 : 1}
     onPress={onPress}
   >
-    <View className="flex-row items-center gap-x-3">
-      <View className="w-8 h-8 rounded-full bg-gray-50 items-center justify-center">
-        <Ionicons name={icon} size={20} color="#555" />
-      </View>
-      <Text className={`text-base font-medium ${textColor}`}>{label}</Text>
+    <View style={styles.itemLeft}>
+      <Ionicons name={icon} size={22} color="#555" />
+      <Text style={[styles.itemText, { color: textColor }]}>{label}</Text> 
     </View>
-    <View className="flex-row items-center gap-x-2">
-      {value && <Text className="text-gray-400 text-sm">{value}</Text>}
+    <View style={styles.itemRight}>
+      {value && <Text style={styles.itemValue}>{value}</Text>}
       {onPress && <Ionicons name="chevron-forward" size={18} color="#ccc" />}
     </View>
   </TouchableOpacity>
@@ -277,18 +258,85 @@ const SwitchItem = ({
   value: boolean;
   onValueChange: (v: boolean) => void;
 }) => (
-  <View className="flex-row items-center justify-between py-4 px-4 border-b border-gray-100 bg-white">
-    <View className="flex-row items-center gap-x-3">
-      <View className="w-8 h-8 rounded-full bg-gray-50 items-center justify-center">
-        <Ionicons name={icon} size={20} color="#555" />
-      </View>
-      <Text className="text-base font-medium text-black">{label}</Text>
+  <View style={styles.switchItem}>
+    <View style={styles.itemLeft}>
+      <Ionicons name={icon} size={22} color="#555" />
+      <Text style={styles.itemText}>{label}</Text>
     </View>
     <Switch
       value={value}
       onValueChange={onValueChange}
       trackColor={{ true: "#e5ddb9ff", false: "#f4f4f5" }}
-      thumbColor={value ? "#ffd000ff" : "#ffffff"}
+      thumbColor={value ? "#ffd000ff" : "#f4f4f5"}
     />
   </View>
 );
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    marginLeft: 12,
+    color: "#000",
+  },
+  scrollContent: {
+    paddingBottom: 24,
+  },
+  section: {
+    marginTop: 24,
+    marginBottom: 8,
+    marginLeft: 16,
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#888",
+  },
+  item: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+    backgroundColor: "#fff",
+  },
+  switchItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: "#fff",
+  },
+  itemLeft: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  itemRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  itemText: {
+    flexShrink: 1,
+    fontSize: 16,
+    color: "#000",
+  },
+  itemValue: {
+    fontSize: 14,
+    color: "#888",
+  },
+});

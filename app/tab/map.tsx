@@ -19,21 +19,41 @@ const abbreviateName = (name: string) => {
 const truncate = (str: string, maxLen: number = 20) =>
   str.length > maxLen ? str.slice(0, maxLen) : str;
 
+// Fonction pour calculer la distance entre deux coordonnées (Haversine formula)
+const calculateDistance = (
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+): number => {
+  const R = 6371; // Rayon de la Terre en km
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c * 1000; // Retourner en mètres
+};
+
 import { useRouter } from "expo-router";
 import {
-  ActivityIndicator,
-  Alert,
-  Dimensions,
-  FlatList,
-  Image,
-  ImageBackground,
-  Linking,
-  Modal,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    ActivityIndicator,
+    Alert,
+    Dimensions,
+    FlatList,
+    Image,
+    ImageBackground,
+    Linking,
+    Modal,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -389,21 +409,35 @@ const HomeScreen = () => {
         region={userRegion}
         mapPadding={{ top: 0, right: 0, bottom: 360, left: 0 }}
       >
-        {vendors.map(
-          (vendor) =>
-            vendor.vendorProfile && (
-              <Marker
-                key={`${vendor.uid}-${selectedCard}`} // <-- clé dynamique ici
-                title={abbreviateName(vendor.displayName)}
-                coordinate={vendor.vendorProfile.coordinates}
-                image={
-                  vendor.displayName === selectedCard
-                    ? require("../../assets/images/pin_r.png")
-                    : require("../../assets/images/pin.png")
-                }
-              />
-            ),
-        )}
+        {vendors.map((vendor) => {
+          if (!vendor.vendorProfile || !clientLocation) return null;
+
+          const isSelected = vendor.displayName === selectedCard;
+          const distance = calculateDistance(
+            clientLocation.latitude,
+            clientLocation.longitude,
+            vendor.vendorProfile.coordinates.latitude,
+            vendor.vendorProfile.coordinates.longitude,
+          );
+
+          // Afficher le marker si: sélectionné OU dans 800m
+          const shouldShow = isSelected || distance <= 800;
+
+          if (!shouldShow) return null;
+
+          return (
+            <Marker
+              key={vendor.uid}
+              title={abbreviateName(vendor.displayName)}
+              coordinate={vendor.vendorProfile.coordinates}
+              image={
+                isSelected
+                  ? require("../../assets/images/pin_r.png")
+                  : require("../../assets/images/pin.png")
+              }
+            />
+          );
+        })}
 
         {routeCoords.length > 0 && (
           <Polyline
