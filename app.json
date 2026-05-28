@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Ayimolou-check",
-    "slug": "Ayimolou-check",
+    "name": "Ayimolou Check",
+    "slug": "ayimolou-check",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/camion_tp3003.png",
-    "scheme": "Ayimolou-check",
+    "scheme": "ayimolou-check",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
