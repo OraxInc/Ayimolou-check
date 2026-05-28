@@ -19,5 +19,7 @@ Thumbs.db
 expo-env.d.ts
 # @end expo-cli
 
+# Local environment variables
+.env
 
 .expo/
