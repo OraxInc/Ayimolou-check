@@ -196,13 +196,6 @@ export default function AccueilScreen() {
           <Text style={styles.name} numberOfLines={1}>
             {item.name} - {item.distance}
           </Text>
-
-          <View style={styles.rating}>
-            <Ionicons name="star" size={14} color="#FFD700" />
-            <Text style={styles.ratingText}>
-              {item.rating} ({item.reviews} avis)
-            </Text>
-          </View>
         </View>
 
         <View style={styles.statusRow}>
@@ -214,6 +207,7 @@ export default function AccueilScreen() {
               },
             ]}
           />
+          
           <Text
             style={{
               color: item.status === "open" ? "#2ecc71" : "#e74c3c",
@@ -221,6 +215,10 @@ export default function AccueilScreen() {
           >
             {item.status === "open" ? t("open") : t("closed")}
           </Text>
+          <View style={styles.rating}>
+            <Ionicons name="star" size={14} color="#FFD700" />
+            <Text style={styles.ratingText}>{item.rating}</Text>
+          </View>
         </View>
 
         <Text style={styles.specialty} numberOfLines={1}>
@@ -691,6 +689,7 @@ const styles = StyleSheet.create({
   rating: {
     flexDirection: "row",
     alignItems: "center",
+    marginLeft: "auto",
     gap: 4,
   },
 
@@ -703,6 +702,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 6,
     marginTop: 4,
+    margin: 4,
   },
 
   statusDot: {

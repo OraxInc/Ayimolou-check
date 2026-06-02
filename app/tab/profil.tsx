@@ -1,13 +1,21 @@
-import { View, Text, Image, Pressable, ScrollView, ActivityIndicator } from "react-native";
-import { StatusBar } from "expo-status-bar";
-import { Ionicons } from "@expo/vector-icons";
-import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useUser } from "@clerk/clerk-expo";
-import { useBackendApi } from "../../services/api";
-import { useFocusEffect } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { useFocusEffect, useRouter } from "expo-router";
+import { StatusBar } from "expo-status-bar";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+    ActivityIndicator,
+    Alert,
+    Image,
+    Pressable,
+    ScrollView,
+    Text,
+    View,
+} from "react-native";
 import Toast from "react-native-toast-message";
-import { User } from "../../types/user";
 import ReviewModal from "../../components/ReviewModal";
+import { useBackendApi } from "../../services/api";
+import { User } from "../../types/user";
 
 // assets/avatars.ts
 export const avatars = [
@@ -24,48 +32,55 @@ export const avatars = [
 export default function Profile() {
   const { user: clerkUser } = useUser();
   const { getUserProfile, getMyOrders, createReview } = useBackendApi();
+  const router = useRouter();
   const [dbUser, setDbUser] = useState<User | null>(null);
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showReviewModal, setShowReviewModal] = useState(false);
-  const [selectedOrderForReview, setSelectedOrderForReview] = useState<any>(null);
+  const [selectedOrderForReview, setSelectedOrderForReview] =
+    useState<any>(null);
   const [submittingReview, setSubmittingReview] = useState(false);
 
   const previousOrdersRef = useRef<any[]>([]);
 
-  const fetchProfileData = useCallback(async (showLoading = false) => {
-    if (clerkUser?.id) {
-      if (showLoading) setLoading(true);
-      try {
-        const [profile, ordersData] = await Promise.all([
-          getUserProfile(clerkUser.id),
-          getMyOrders(clerkUser.id)
-        ]);
-        
-        // Check for status changes to show Toast
-        ordersData.forEach((newOrder: any) => {
-          const oldOrder = previousOrdersRef.current.find(o => o.id === newOrder.id);
-          if (oldOrder && oldOrder.status !== newOrder.status) {
-            Toast.show({
-              type: 'info',
-              text1: `Commande #${newOrder.id.slice(-4)}`,
-              text2: `Nouveau statut : ${newOrder.status}`,
-              position: 'top',
-              visibilityTime: 4000,
-            });
-          }
-        });
+  const fetchProfileData = useCallback(
+    async (showLoading = false) => {
+      if (clerkUser?.id) {
+        if (showLoading) setLoading(true);
+        try {
+          const [profile, ordersData] = await Promise.all([
+            getUserProfile(clerkUser.id),
+            getMyOrders(clerkUser.id),
+          ]);
 
-        setDbUser(profile);
-        setOrders(ordersData);
-        previousOrdersRef.current = ordersData;
-      } catch (error) {
-        console.error("Error fetching profile data:", error);
-      } finally {
-        if (showLoading) setLoading(false);
+          // Check for status changes to show Toast
+          ordersData.forEach((newOrder: any) => {
+            const oldOrder = previousOrdersRef.current.find(
+              (o) => o.id === newOrder.id,
+            );
+            if (oldOrder && oldOrder.status !== newOrder.status) {
+              Toast.show({
+                type: "info",
+                text1: `Commande #${newOrder.id.slice(-4)}`,
+                text2: `Nouveau statut : ${newOrder.status}`,
+                position: "top",
+                visibilityTime: 4000,
+              });
+            }
+          });
+
+          setDbUser(profile);
+          setOrders(ordersData);
+          previousOrdersRef.current = ordersData;
+        } catch (error) {
+          console.error("Error fetching profile data:", error);
+        } finally {
+          if (showLoading) setLoading(false);
+        }
       }
-    }
-  }, [clerkUser?.id]);
+    },
+    [clerkUser?.id],
+  );
 
   // Initial fetch
   useEffect(() => {
@@ -80,7 +95,7 @@ export default function Profile() {
       }, 10000); // 10 seconds
 
       return () => clearInterval(interval);
-    }, [fetchProfileData])
+    }, [fetchProfileData]),
   );
 
   if (loading) {
@@ -91,8 +106,11 @@ export default function Profile() {
     );
   }
 
-  const displayName = dbUser?.displayName || clerkUser?.fullName || "Utilisateur";
-  const userRole = dbUser?.role ? dbUser.role.charAt(0).toUpperCase() + dbUser.role.slice(1) : "Client";
+  const displayName =
+    dbUser?.displayName || clerkUser?.fullName || "Utilisateur";
+  const userRole = dbUser?.role
+    ? dbUser.role.charAt(0).toUpperCase() + dbUser.role.slice(1)
+    : "Client";
   const photoURL = dbUser?.photoURL || clerkUser?.imageUrl;
 
   return (
@@ -104,7 +122,7 @@ export default function Profile() {
         <Pressable>
           <Ionicons name="arrow-back" size={24} color="black" />
         </Pressable>
-        <Pressable>
+        <Pressable onPress={() => router.push("/tab/param")}>
           <Ionicons name="settings-outline" size={24} color="black" />
         </Pressable>
       </View>
@@ -113,7 +131,11 @@ export default function Profile() {
       <View className="flex-row items-center m-6">
         <View className="w-32 h-32 rounded-full bg-white items-center justify-center mb-3 ml-4">
           <Image
-            source={photoURL ? { uri: photoURL } : require("../../assets/images/profil_1.jpeg")}
+            source={
+              photoURL
+                ? { uri: photoURL }
+                : require("../../assets/images/profil_1.jpeg")
+            }
             className="w-28 h-28 rounded-full"
           />
         </View>
@@ -138,36 +160,53 @@ export default function Profile() {
 
           {orders.length > 0 ? (
             orders.slice(0, 3).map((order) => (
-              <View key={order.id} className="flex-row items-center justify-between mb-4 px-2">
+              <View
+                key={order.id}
+                className="flex-row items-center justify-between mb-4 px-2"
+              >
                 <View>
-                  <Text className="text-white font-medium">Commande #{order.id.slice(-4)}</Text>
-                  <Text className="text-gray-400 text-xs">{new Date(order.createdAt).toLocaleDateString()}</Text>
+                  <Text className="text-white font-medium">
+                    Commande #{order.id.slice(-4)}
+                  </Text>
+                  <Text className="text-gray-400 text-xs">
+                    {new Date(order.createdAt).toLocaleDateString()}
+                  </Text>
                 </View>
                 <View className="flex-row items-center gap-2">
-                  <Text style={{ 
-                    color: order.status === 'COMPLETED' ? '#4CAF50' : 
-                          order.status === 'CANCELLED' ? '#F44336' : '#FFC107',
-                    fontSize: 12,
-                    fontWeight: 'bold'
-                  }}>
+                  <Text
+                    style={{
+                      color:
+                        order.status === "COMPLETED"
+                          ? "#4CAF50"
+                          : order.status === "CANCELLED"
+                            ? "#F44336"
+                            : "#FFC107",
+                      fontSize: 12,
+                      fontWeight: "bold",
+                    }}
+                  >
                     {order.status}
                   </Text>
-                  {order.status === 'COMPLETED' && (
-                    <Pressable 
+                  {order.status === "COMPLETED" && (
+                    <Pressable
                       onPress={() => {
                         setSelectedOrderForReview(order);
                         setShowReviewModal(true);
                       }}
                       className="bg-primary px-2 py-1 rounded-md"
                     >
-                      <Text style={{ fontSize: 10, fontWeight: 'bold' }}>Noter</Text>
+                      <Text style={{ fontSize: 10, fontWeight: "bold" }}>
+                        Noter
+                      </Text>
                     </Pressable>
                   )}
                 </View>
               </View>
             ))
           ) : (
-            <Text className="text-gray-400 text-center py-4">Aucune commande pour le moment</Text>
+            <Text className="text-gray-400 text-center py-4">
+              Aucune commande pour le moment
+            </Text>
           )}
 
           <View className="bg-gray h-[1px] bg-gray-300 my-4" />
@@ -248,24 +287,24 @@ export default function Profile() {
         loading={submittingReview}
         onSubmit={async (rating, comment) => {
           if (!selectedOrderForReview || !clerkUser) return;
-          
+
           try {
             setSubmittingReview(true);
             await createReview({
               userId: clerkUser.id,
               userName: displayName,
               targetId: selectedOrderForReview.vendorId, // On note le vendeur
-              targetType: 'vendor',
+              targetType: "vendor",
               rating,
-              comment
+              comment,
             });
-            
+
             Toast.show({
-              type: 'success',
-              text1: 'Merci !',
-              text2: 'Votre avis a été enregistré.',
+              type: "success",
+              text1: "Merci !",
+              text2: "Votre avis a été enregistré.",
             });
-            
+
             setShowReviewModal(false);
           } catch (error) {
             Alert.alert("Erreur", "Impossible d'envoyer l'avis.");

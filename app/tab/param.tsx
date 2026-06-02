@@ -3,13 +3,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useContext, useState } from "react";
 import {
-  Modal,
-  ScrollView,
-  StyleSheet,
-  Switch,
-  Text,
-  TouchableOpacity,
-  View
+    Modal,
+    ScrollView,
+    StyleSheet,
+    Switch,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useBackendApi } from "../../services/api";
@@ -115,7 +115,10 @@ export default function ParamScreen() {
   return (
     <SafeAreaView style={styles.container} className="bg-primary mt-12">
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
+        <TouchableOpacity
+          onPress={() => router.push("/tab/map")}
+          activeOpacity={0.7}
+        >
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{t("parameters")}</Text>
@@ -134,7 +137,7 @@ export default function ParamScreen() {
           onValueChange={handleClientChange}
         />
         <SwitchItem
-          icon="lock-closed-outline"
+          icon="bicycle-outline"
           label={t("delivery")}
           value={isLivreur}
           onValueChange={handleLivreurChange}
@@ -146,7 +149,9 @@ export default function ParamScreen() {
           onValueChange={handleVendeurChange}
         />
 
-        <Text style={styles.section}>{t("assistanceAndLegal").toUpperCase()}</Text>
+        <Text style={styles.section}>
+          {t("assistanceAndLegal").toUpperCase()}
+        </Text>
 
         <SettingItem
           icon="alert-circle-outline"
@@ -205,7 +210,9 @@ export default function ParamScreen() {
                 onPress={() => handleLanguageChange(lang)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.itemText}>{getLanguageDisplayName(lang)}</Text>
+                <Text style={styles.itemText}>
+                  {getLanguageDisplayName(lang)}
+                </Text>
                 {language === lang && (
                   <Ionicons name="checkmark" size={24} color="#ffd000" />
                 )}
@@ -238,7 +245,7 @@ const SettingItem = ({
   >
     <View style={styles.itemLeft}>
       <Ionicons name={icon} size={22} color="#555" />
-      <Text style={[styles.itemText, { color: textColor }]}>{label}</Text> 
+      <Text style={[styles.itemText, { color: textColor }]}>{label}</Text>
     </View>
     <View style={styles.itemRight}>
       {value && <Text style={styles.itemValue}>{value}</Text>}

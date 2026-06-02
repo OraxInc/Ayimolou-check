@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 // On iOS simulator or web, localhost works fine. Physical devices should use your machine's IP.
 const defaultHost =
   Platform.OS === "android"
-    ? "http://192.168.1.65:5000"
+    ? "http://192.168.1.66:5000"
     : "http://localhost:5000";
 const API_URL = process.env.EXPO_PUBLIC_API_URL || `${defaultHost}/api`;
 
