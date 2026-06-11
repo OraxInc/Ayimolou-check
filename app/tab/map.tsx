@@ -76,6 +76,7 @@ const HomeScreen = () => {
   const [expanded, setExpanded] = useState(true); // Etendu par défaut
   const [userRegion, setUserRegion] = useState<any>(null);
   const [routeCoords, setRouteCoords] = useState<any[]>([]);
+  const [visibleVendorUids, setVisibleVendorUids] = useState<string[]>([]);
   const [showFoodAlert, setShowFoodAlert] = useState(false);
   const [packByVendor, setPackByVendor] = useState<any[]>([]);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -169,6 +170,20 @@ const HomeScreen = () => {
     longitude: number;
   } | null>(null);
 
+  const centerOnUserPosition = () => {
+    if (!clientLocation) return;
+
+    const region = {
+      latitude: clientLocation.latitude,
+      longitude: clientLocation.longitude,
+      latitudeDelta: 0.009,
+      longitudeDelta: 0.009,
+    };
+
+    setUserRegion(region);
+    mapRef.current?.animateToRegion(region, 1000);
+  };
+
   useEffect(() => {
     const loadVendors = async () => {
       setLoading(true);
@@ -196,8 +211,8 @@ const HomeScreen = () => {
       const region = {
         latitude,
         longitude,
-        latitudeDelta: 0.008, // ~500m
-        longitudeDelta: 0.008, // ~500m
+        latitudeDelta: 0.009, // ~1km diamètre
+        longitudeDelta: 0.009, // ~1km diamètre
       };
 
       setUserRegion(region);
@@ -206,6 +221,38 @@ const HomeScreen = () => {
       mapRef.current?.animateToRegion(region, 2000);
     })();
   }, []);
+
+  useEffect(() => {
+    if (!clientLocation || vendors.length === 0) return;
+
+    const nearbyVendors = vendors
+      .filter((vendor) => vendor.vendorProfile)
+      .map((vendor) => ({
+        uid: vendor.uid,
+        distance: calculateDistance(
+          clientLocation.latitude,
+          clientLocation.longitude,
+          vendor.vendorProfile!.coordinates.latitude,
+          vendor.vendorProfile!.coordinates.longitude,
+        ),
+      }))
+      .filter((vendor) => vendor.distance <= 800)
+      .sort((a, b) => a.distance - b.distance);
+
+    setVisibleVendorUids([]);
+    const timeouts: Array<ReturnType<typeof setTimeout>> = [];
+
+    nearbyVendors.forEach((vendor, index) => {
+      const timeoutId = setTimeout(() => {
+        setVisibleVendorUids((prev) => [...prev, vendor.uid]);
+      }, index * 250);
+      timeouts.push(timeoutId);
+    });
+
+    return () => {
+      timeouts.forEach(clearTimeout);
+    };
+  }, [vendors, clientLocation]);
 
   useEffect(() => {
     // capture destination to preserve type-narrowing inside the async function
@@ -420,8 +467,9 @@ const HomeScreen = () => {
             vendor.vendorProfile.coordinates.longitude,
           );
 
-          // Afficher le marker si: sélectionné OU dans 800m
-          const shouldShow = isSelected || distance <= 800;
+          const isNearby = distance <= 800;
+          const shouldShow =
+            isSelected || (isNearby && visibleVendorUids.includes(vendor.uid));
 
           if (!shouldShow) return null;
 
@@ -466,6 +514,9 @@ const HomeScreen = () => {
       </View>
 
       <View style={styles.markerListContainer}>
+        <Pressable onPress={centerOnUserPosition} style={styles.positionButton}>
+          <Feather name="navigation" size={20} color="#000" />
+        </Pressable>
         <Pressable // bouton jaune d'expansion/repliage
           onPress={() => setExpanded(!expanded)}
           className="items-center h-8 w-8 rounded-full shadow-md bg-primary m-2"
@@ -709,6 +760,25 @@ const styles = StyleSheet.create({
     elevation: 3,
     width: width / 2 - 16,
     marginBottom: 10,
+  },
+  positionButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    height: 36,
+    width: 36,
+    borderRadius: 999,
+    backgroundColor: "#FFC700",
+    shadowColor: "#000",
+    shadowOpacity: 0.15,
+    shadowRadius: 5,
+    elevation: 4,
+    marginLeft: 10,
+    marginBottom: 8,
+  },
+  positionButtonText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#000",
   },
   markerImage: {
     borderRadius: 10,
