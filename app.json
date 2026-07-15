@@ -4,7 +4,7 @@
     "slug": "ayimolou-check",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/camion_tp3003.png",
+    "icon": "./assets/images/round_icon_sh.png",
     "scheme": "ayimolou-check",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -13,12 +13,11 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "yellow"
+        "foregroundImage": "./assets/images/round_icon_sh.png",
+        "backgroundColor": "#FFFF00"
       },
       "edgeToEdgeEnabled": true,
-      // allow HTTP (cleartext) traffic for local development
-      "usesCleartextTraffic": true
+      "package": "com.joeldate39.ayimoloucheck"
     },
     "web": {
       "bundler": "metro",
@@ -30,16 +29,22 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/camion_tp3003.png",
+          "image": "./assets/images/round_icon_sh.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "yellow"
+          "backgroundColor": "#FFFF00"
         }
       ],
       "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c1174fdc-bc7d-46a4-b992-ba55794b85ff"
+      }
     }
   }
 }
