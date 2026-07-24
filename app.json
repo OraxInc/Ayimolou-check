@@ -17,7 +17,12 @@
         "backgroundColor": "#FFFF00"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.joeldate39.ayimoloucheck"
+      "package": "com.joeldate39.ayimoloucheck",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAtm9GBHeI4YeP_PvZu7GIN63XQHsUQp7Q"
+        }
+      }
     },
     "web": {
       "bundler": "metro",

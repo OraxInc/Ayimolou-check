@@ -1,8 +1,26 @@
 import { useUser } from "@clerk/clerk-expo";
 import { Feather, FontAwesome } from "@expo/vector-icons";
 import * as Location from "expo-location";
+import { useRouter } from "expo-router";
 import LottieView from "lottie-react-native";
 import React, { useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  FlatList,
+  Image,
+  ImageBackground,
+  Linking,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import MapView, { Marker, Polyline } from "react-native-maps";
+import { SafeAreaView } from "react-native-safe-area-context";
 import OrderConfirmationModal from "../../components/OrderConfirmationModal";
 import { useBackendApi } from "../../services/api";
 import { User } from "../../types/user";
@@ -38,25 +56,6 @@ const calculateDistance = (
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   return R * c * 1000; // Retourner en mètres
 };
-
-import { useRouter } from "expo-router";
-import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    FlatList,
-    Image,
-    ImageBackground,
-    Linking,
-    Modal,
-    Pressable,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
-} from "react-native";
-import MapView, { Marker, Polyline } from "react-native-maps";
-import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width, height } = Dimensions.get("window");
 const API_KEY = "714aaa82e8bf4eb5947edbaeb6aa19e6";
@@ -455,6 +454,7 @@ const HomeScreen = () => {
         showsUserLocation
         region={userRegion}
         mapPadding={{ top: 0, right: 0, bottom: 360, left: 0 }}
+        provider="google"
       >
         {vendors.map((vendor) => {
           if (!vendor.vendorProfile || !clientLocation) return null;
@@ -478,12 +478,30 @@ const HomeScreen = () => {
               key={vendor.uid}
               title={abbreviateName(vendor.displayName)}
               coordinate={vendor.vendorProfile.coordinates}
-              image={
-                isSelected
-                  ? require("../../assets/images/pin_r.png")
-                  : require("../../assets/images/pin.png")
-              }
-            />
+              anchor={{ x: 0.5, y: 1 }}
+              onPress={() => {
+                setSelectedCard(vendor.displayName);
+              }}
+            >
+              <View
+                style={{
+                  width: 45,
+                  height: 45,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Image
+                  source={
+                    isSelected
+                      ? require("../../assets/images/pin_r.png")
+                      : require("../../assets/images/pin.png")
+                  }
+                  style={{ width: "100%", height: "100%" }}
+                  resizeMode="contain"
+                />
+              </View>
+            </Marker>
           );
         })}
 

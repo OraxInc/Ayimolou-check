@@ -25,8 +25,9 @@ Les variables locales sont a placer dans `.env`.
 # corrections apportées 15/07/2026 : 
 Les erreurs de dépendance et incompatibilité package expo.
 corrigé app.json, package.json, eas.json.
-supprimer les packeges bloquant non utiilisé.
+supprimer les packages bloquant non utiilisé.
 ajouter la clé publique clerk dans eas.json pour le preview apk.
 ajouter le .npmrc pour ignorer les warnings eas build preview expo.
 corrigé l'auth clerk pour la redirection url par l'ajout d'un utl scheme.
 ajout bouton Google G dans le pressable continuer avec google.
+ajouter de l'url backend de test vercel de lucas.

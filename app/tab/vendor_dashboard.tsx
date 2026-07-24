@@ -2,24 +2,24 @@ import { useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect } from "expo-router";
 import React, {
-    useCallback,
-    useContext,
-    useEffect,
-    useRef,
-    useState,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
 } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    Image,
-    Modal,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Image,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
@@ -251,10 +251,10 @@ export default function VendorDashboard() {
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       PENDING: "#fab1a0",
-      ACCEPTED: "#ffeaa7",
-      PREPARING: "#81ecec",
-      READY: "#55efc4",
-      COMPLETED: "#00b894",
+      ACCEPTED: "#a7fbff",
+      PREPARING: "#fc5940",
+      READY: "#55ef6c",
+      COMPLETED: "#55ef6c",
       CANCELLED: "#dfe6e9",
     };
     return colors[status] || "#dfe6e9";
@@ -343,11 +343,16 @@ export default function VendorDashboard() {
                   <TouchableOpacity
                     style={[
                       styles.actionBtn,
-                      { backgroundColor: "#00cec9", flex: 1 },
+                      {
+                        backgroundColor: "#f6c34d",
+                        justifyContent: "center",
+                      },
                     ]}
                     onPress={() => handleStatusUpdate(order.id, "READY")}
                   >
-                    <Text style={styles.btnText}>✅ Prête à livrer</Text>
+                    <Text style={[styles.btnText, styles.readyBtnText]}>
+                      Prête à livrer
+                    </Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -404,13 +409,13 @@ export default function VendorDashboard() {
                 onValueChange={() =>
                   toggleProductAvailability(product.id, product.isAvailable)
                 }
-                trackColor={{ true: "#55efc4", false: "#dfe6e9" }}
-                thumbColor={product.isAvailable ? "#00b894" : "#b2bec3"}
+                trackColor={{ true: "#a2a3a3", false: "#dfe6e9" }}
+                thumbColor={product.isAvailable ? "#282828" : "#b2bec3"}
               />
               <Text
                 style={{
                   fontSize: 9,
-                  color: product.isAvailable ? "#00b894" : "#b2bec3",
+                  color: product.isAvailable ? "#303131" : "#b2bec3",
                   fontWeight: "700",
                   marginTop: 2,
                 }}
@@ -456,8 +461,8 @@ export default function VendorDashboard() {
           <Switch
             value={!!isOpen}
             onValueChange={toggleShopStatus}
-            trackColor={{ true: "#55efc4", false: "#fab1a0" }}
-            thumbColor={isOpen ? "#00b894" : "#d63031"}
+            trackColor={{ true: "#868b89", false: "#fab1a0" }}
+            thumbColor={isOpen ? "#232323" : "#d63031"}
             disabled={isUpdatingStatus}
           />
         </View>
@@ -613,7 +618,7 @@ export default function VendorDashboard() {
           <View
             style={[
               styles.shopPill,
-              { backgroundColor: isOpen ? "#55efc4" : "#fab1a0" },
+              { backgroundColor: isOpen ? "#f6c34d" : "#fab1a0" },
             ]}
           >
             <Text style={styles.shopPillText}>
@@ -806,8 +811,15 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: 10,
     alignItems: "center",
+    justifyContent: "center",
+    minHeight: 42,
   },
-  btnText: { fontWeight: "700", fontSize: 13 },
+  btnText: { fontWeight: "700", fontSize: 13, textAlign: "center" },
+  readyBtnText: {
+    flexShrink: 1,
+    flexWrap: "wrap",
+    lineHeight: 16,
+  },
 
   // Products
   addProductBtn: {
