@@ -5,7 +5,7 @@ import { Platform } from "react-native";
 // On iOS simulator or web, localhost works fine. Physical devices should use your machine's IP.
 const defaultHost =
   Platform.OS === "android"
-    ? "http://192.168.1.65:5000"
+    ? "http://192.168.1.66:5000"
     : "http://localhost:5000";
 const API_URL = process.env.EXPO_PUBLIC_API_URL || `${defaultHost}/api`;
 
@@ -325,6 +325,25 @@ export const useBackendApi = () => {
     }
   };
 
+  const purchaseVerifiedBadge = async (uid: string) => {
+    try {
+      const token = await getToken();
+      const response = await fetch(
+        `${API_URL}/users/${uid}/verified-badge/purchase`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      return response.ok ? await response.json() : null;
+    } catch (error) {
+      console.error("Error purchasing verified badge:", error);
+      return null;
+    }
+  };
   const getAvailableDeliveries = async () => {
     try {
       const token = await getToken();
@@ -451,6 +470,7 @@ export const useBackendApi = () => {
     createProduct: createProductFront,
     deleteProduct: deleteProductFront,
     updateUserRole,
+    purchaseVerifiedBadge,
     getAvailableDeliveries,
     assignDelivery,
     completeDelivery,

@@ -7,6 +7,7 @@ export interface User {
   displayName: string;
   photoURL?: string;
   role: UserRole;
+  isVerified?: boolean;
   status: 'active' | 'suspended';
   createdAt: string | Date;
   updatedAt: string | Date;

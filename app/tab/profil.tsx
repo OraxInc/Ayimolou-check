@@ -1,5 +1,5 @@
 import { useUser } from "@clerk/clerk-expo";
-import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome, Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -14,6 +14,7 @@ import {
 } from "react-native";
 import Toast from "react-native-toast-message";
 import ReviewModal from "../../components/ReviewModal";
+import VerifiedBadge from "../../components/VerifiedBadge";
 import { useBackendApi } from "../../services/api";
 import { User } from "../../types/user";
 
@@ -140,7 +141,10 @@ export default function Profile() {
           />
         </View>
         <View className="ml-6">
-          <Text className="text-2xl font-bold">{displayName}</Text>
+          <View className="flex-row items-center">
+            <Text className="text-2xl font-bold">{displayName}</Text>
+            <VerifiedBadge verified={dbUser?.isVerified} size={20} />
+          </View>
           <Text className="text-sm text-gray-700">{userRole} Premium</Text>
         </View>
       </View>
@@ -193,11 +197,12 @@ export default function Profile() {
                         setSelectedOrderForReview(order);
                         setShowReviewModal(true);
                       }}
-                      className="bg-primary px-2 py-1 rounded-md"
+                      className="bg-primary px-2 py-1 rounded-md flex-row items-center justify-center"
                     >
                       <Text style={{ fontSize: 10, fontWeight: "bold" }}>
                         Noter
                       </Text>
+                      <FontAwesome name="star" size={11} color="black" style={{ marginLeft: 4}} />
                     </Pressable>
                   )}
                 </View>

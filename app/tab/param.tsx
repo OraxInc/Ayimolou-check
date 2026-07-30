@@ -1,8 +1,9 @@
 import { useAuth, useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
+    Alert,
     Modal,
     ScrollView,
     StyleSheet,
@@ -30,12 +31,55 @@ export default function ParamScreen() {
 
   const { t } = useTranslation(language);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
-
+  const [isVerified, setIsVerified] = useState(false);
   const { signOut } = useAuth();
   const { user } = useUser();
   const router = useRouter();
-  const { updateUserRole, getUserProfile } = useBackendApi();
+  const { updateUserRole, getUserProfile, purchaseVerifiedBadge } = useBackendApi();
 
+  useEffect(() => {
+    const loadVerificationStatus = async () => {
+      if (!user?.id) return;
+      const profile = await getUserProfile(user.id);
+      setIsVerified(profile?.isVerified === true);
+    };
+
+    void loadVerificationStatus();
+  }, [user?.id]);
+
+  const handleBadgePurchase = () => {
+    if (isVerified || !user?.id) return;
+
+    Alert.alert(
+      "Badge certifie",
+      "Apres validation de votre paiement, un badge bleu apparaitra a cote de votre nom dans l application.",
+      [
+        { text: "Annuler", style: "cancel" },
+        {
+          text: "Acheter",
+          onPress: async () => {
+            const result = await purchaseVerifiedBadge(user.id);
+            const verified = result?.isVerified === true || result?.user?.isVerified === true;
+
+            if (verified) {
+              setIsVerified(true);
+              Alert.alert("Badge active", "Votre profil est maintenant certifie.");
+            } else if (result) {
+              Alert.alert(
+                "Paiement en attente",
+                "Votre demande est en cours de validation. Le badge sera affiche apres confirmation.",
+              );
+            } else {
+              Alert.alert(
+                "Achat indisponible",
+                "Impossible de lancer le paiement. Verifiez votre connexion puis reessayez.",
+              );
+            }
+          },
+        },
+      ],
+    );
+  };
   const handleLogout = async () => {
     try {
       await signOut();
@@ -89,7 +133,7 @@ export default function ParamScreen() {
 
   const handleVendeurChange = async (value: boolean) => {
     if (value) {
-      // 1. Vérifier si le profil vendeur existe
+      // 1. VÃ©rifier si le profil vendeur existe
       try {
         const profile = await getUserProfile(user?.id!);
         if (!profile?.vendorProfile || !profile.vendorProfile.shopName) {
@@ -176,6 +220,15 @@ export default function ParamScreen() {
         />
 
         <Text style={styles.section}>{t("actions").toUpperCase()}</Text>
+
+        {isVendeur && (
+          <SettingItem
+            icon="checkmark-circle"
+            label={isVerified ? "Badge certifie" : "Obtenir le badge certifie"}
+            value={isVerified ? "Actif" : undefined}
+            onPress={isVerified ? undefined : handleBadgePurchase}
+          />
+        )}
 
         <SettingItem
           icon="log-out-outline"

@@ -22,6 +22,7 @@ import {
 import MapView, { Marker, Polyline } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 import OrderConfirmationModal from "../../components/OrderConfirmationModal";
+import VerifiedBadge from "../../components/VerifiedBadge";
 import { useBackendApi } from "../../services/api";
 import { User } from "../../types/user";
 
@@ -641,14 +642,16 @@ const HomeScreen = () => {
                       <Text
                         numberOfLines={1}
                         ellipsizeMode="tail"
-                        style={
+                        style={[
                           vendor.displayName === selectedCard
                             ? styles.activeMarkerName
-                            : styles.markerName
-                        }
+                            : styles.markerName,
+                          { flexShrink: 1 },
+                        ]}
                       >
                         {truncate(abbreviateName(vendor.displayName), 15)}
                       </Text>
+                      <VerifiedBadge verified={vendor.isVerified} />
                     </View>
 
                     {/* --- Étoiles + note --- */}

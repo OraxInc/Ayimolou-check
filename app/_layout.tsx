@@ -1,4 +1,5 @@
-import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/clerk-expo";
+﻿import { ClerkProvider, ClerkLoaded, useAuth } from "@clerk/clerk-expo";
+import NetInfo, { useNetInfo } from "@react-native-community/netinfo";
 import { Stack, useRouter, useSegments } from "expo-router";
 import "./globals.css"
 import React, { useEffect, useContext } from "react";
@@ -6,6 +7,7 @@ import { SettingsProvider, SettingsContext } from "./context/SettingsContext";
 import { tokenCache } from "../utils/tokenCache";
 import { useBackendApi } from "../services/api";
 import Toast from 'react-native-toast-message';
+import OfflineScreen from "../components/OfflineScreen";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
@@ -45,7 +47,7 @@ function InitialLayout() {
         router.replace("/home_map");
       }
     } else if (!isSignedIn) {
-      // Si l'utilisateur n'est pas connecté et qu'il n'est pas sur une page publique autorisé, rediriger vers login
+      // Si l'utilisateur n'est pas connectÃ© et qu'il n'est pas sur une page publique autorisÃ©, rediriger vers login
       if (!inSplashGroup && !isIndex && !isLogin) {
         router.replace("/login");
       }
@@ -61,15 +63,28 @@ function InitialLayout() {
   );
 }
 
+function NetworkGate({ children }: React.PropsWithChildren) {
+  const { isConnected, isInternetReachable } = useNetInfo();
+  const isOffline = isConnected === false || isInternetReachable === false;
+
+  if (isOffline) {
+    return <OfflineScreen onRetry={() => void NetInfo.refresh()} />;
+  }
+
+  return <>{children}</>;
+}
 export default function RootLayout() {
   return (
-    <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
-      <ClerkLoaded>
-        <SettingsProvider>
-          <InitialLayout />
-          <Toast />
-        </SettingsProvider>
-      </ClerkLoaded>
-    </ClerkProvider>
+    <NetworkGate>
+      <ClerkProvider tokenCache={tokenCache} publishableKey={publishableKey}>
+        <ClerkLoaded>
+          <SettingsProvider>
+            <InitialLayout />
+            <Toast />
+          </SettingsProvider>
+        </ClerkLoaded>
+      </ClerkProvider>
+    </NetworkGate>
   );
 }
+

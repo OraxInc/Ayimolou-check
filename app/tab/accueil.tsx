@@ -1,4 +1,4 @@
-import { useUser } from "@clerk/clerk-expo";
+﻿import { useUser } from "@clerk/clerk-expo";
 import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Location from "expo-location";
@@ -17,10 +17,11 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import OrderConfirmationModal from "../../components/OrderConfirmationModal";
+import VerifiedBadge from "../../components/VerifiedBadge";
 import { useBackendApi } from "../../services/api";
 import { useTranslation } from "../../services/i18n";
 import { SettingsContext } from "../context/SettingsContext";
@@ -40,6 +41,7 @@ type Seller = {
   description?: string;
   phoneNumber?: string;
   imageUrl?: string;
+  isVerified?: boolean;
 };
 
 const ACTIVE_ORDER_KEY = "activeOrderId";
@@ -74,7 +76,7 @@ export default function AccueilScreen() {
   const { getVendors, getCategories, getProducts, createOrder, getMyOrders } =
     useBackendApi();
 
-  // ─── Charger la commande active depuis AsyncStorage ──────────────
+  // Charger la commande active depuis AsyncStorage 
   const loadActiveOrder = async () => {
     try {
       const savedOrderId = await AsyncStorage.getItem(ACTIVE_ORDER_KEY);
@@ -96,7 +98,7 @@ export default function AccueilScreen() {
         savedStatus &&
         TERMINAL_STATUSES.includes(savedStatus)
       ) {
-        // Commande terminée, nettoyer
+        // Commande terminï¿½e, nettoyer
         await AsyncStorage.multiRemove([
           ACTIVE_ORDER_KEY,
           ACTIVE_ORDER_STATUS_KEY,
@@ -107,7 +109,7 @@ export default function AccueilScreen() {
     }
   };
 
-  // ─── Polling pour mettre à jour le statut de la commande active ──
+  // Polling pour mettre Ã  jour le statut de la commande active 
   useFocusEffect(
     React.useCallback(() => {
       loadActiveOrder();
@@ -131,12 +133,13 @@ export default function AccueilScreen() {
           reviews: 24,
           status: v.vendorProfile?.isOpen ? "open" : "closed",
           specialty: v.vendorProfile?.specialty || ["Ayimolou"],
-          price: "à partir de 500 FCFA",
+          price: "Ã  partir de 500 FCFA",
           avatar: v.photoURL || "https://i.pravatar.cc/150?u=" + v.uid,
           description:
             v.vendorProfile?.description || "Pas de description disponible.",
           phoneNumber: v.phoneNumber,
           imageUrl: v.vendorProfile?.imageUrl,
+          isVerified: v.isVerified === true,
         }));
         setVendors(mappedVendors);
         setCategories(categoriesData);
@@ -193,9 +196,12 @@ export default function AccueilScreen() {
 
       <View style={{ flex: 1 }}>
         <View style={styles.rowBetween}>
-          <Text style={styles.name} numberOfLines={1}>
-            {item.name} - {item.distance}
-          </Text>
+          <View style={styles.nameRow}>
+            <Text style={[styles.name, { flexShrink: 1 }]} numberOfLines={1}>
+              {item.name} - {item.distance}
+            </Text>
+            <VerifiedBadge verified={item.isVerified} />
+          </View>
         </View>
 
         <View style={styles.statusRow}>
@@ -207,7 +213,7 @@ export default function AccueilScreen() {
               },
             ]}
           />
-          
+
           <Text
             style={{
               color: item.status === "open" ? "#2ecc71" : "#e74c3c",
@@ -250,8 +256,8 @@ export default function AccueilScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} className="p-12">
-      {/* Bannière Commande Active */}
+    <SafeAreaView style={styles.container}>
+      {/* Banniere Commande Active */}
       {activeOrderId && (
         <Animated.View
           style={[
@@ -359,11 +365,11 @@ export default function AccueilScreen() {
           )}
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
-          contentContainerStyle={{ paddingBottom: 100 }}
+          contentContainerStyle={{ paddingBottom: 5 }}
           showsVerticalScrollIndicator={false}
           ListEmptyComponent={
             <View style={{ alignItems: "center", marginTop: 50 }}>
-              <Text style={{ color: "#555" }}>Aucune revendeuse trouvée</Text>
+              <Text style={{ color: "#555" }}>Aucune revendeuse trouvÃ©e</Text>
             </View>
           }
         />
@@ -398,9 +404,10 @@ export default function AccueilScreen() {
                 />
 
                 <View style={styles.modalInfoContainer}>
-                  <Text style={styles.modalShopName}>
-                    {selectedVendor.name}
-                  </Text>
+                  <View style={styles.modalNameRow}>
+                    <Text style={styles.modalShopName}>{selectedVendor.name}</Text>
+                    <VerifiedBadge verified={selectedVendor.isVerified} size={20} />
+                  </View>
 
                   <View style={styles.modalSubHeader}>
                     <View style={styles.rating}>
@@ -551,7 +558,7 @@ export default function AccueilScreen() {
                           setSelectedItems({});
                           setSelectedVendor(null);
                           setShowConfirmModal(false);
-                          // Redirection vers l'écran de suivi
+                          // Redirection vers l'Ã©cran de suivi
                           router.push({
                             pathname: "/tab/suivi_commande",
                             params: { orderId: result.id },
@@ -610,9 +617,9 @@ export default function AccueilScreen() {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: "#ffcc00ff",
-    paddingHorizontal: 18,
+    paddingHorizontal: 12,
+    marginBottom: 12,
   },
 
   searchBox: {
@@ -679,6 +686,11 @@ const styles = StyleSheet.create({
   rowBetween: {
     flexDirection: "row",
     justifyContent: "space-between",
+  },
+
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 
   name: {
@@ -768,11 +780,17 @@ const styles = StyleSheet.create({
   modalInfoContainer: {
     padding: 24,
   },
+  modalNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+
   modalShopName: {
     fontSize: 28,
     fontWeight: "800",
     color: "#000",
-    marginBottom: 8,
+    marginBottom: 0,
   },
   modalSubHeader: {
     flexDirection: "row",

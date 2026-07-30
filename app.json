@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "Ayimolou Check",
+    "slug": "ayimolou-check",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/round_icon_sh.png",
+    "scheme": "ayimoloucheck",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/round_icon_sh.png",
+        "backgroundColor": "#FFC700"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.joeldate39.ayimoloucheck",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyAtm9GBHeI4YeP_PvZu7GIN63XQHsUQp7Q"
+        }
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/round_icon_sh.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFC700"
+        }
+      ],
+      "expo-sqlite"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c1174fdc-bc7d-46a4-b992-ba55794b85ff"
+      }
+    }
+  }
+}

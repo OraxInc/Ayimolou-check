@@ -23,3 +23,5 @@ expo-env.d.ts
 .env
 
 .expo/
+
+app.json

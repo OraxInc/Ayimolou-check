@@ -23,6 +23,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
+import VerifiedBadge from "../../components/VerifiedBadge";
 import { useBackendApi } from "../../services/api";
 import { useTranslation } from "../../services/i18n";
 import { SettingsContext } from "../context/SettingsContext";
@@ -117,7 +118,7 @@ export default function VendorDashboard() {
     }, [fetchData]),
   );
 
-  // ─── Shop Toggle ───────────────────────────────────────────────
+  //  Shop Toggle 
   const toggleShopStatus = async () => {
     if (!dbUser || isUpdatingStatus) return;
     setIsUpdatingStatus(true);
@@ -137,7 +138,7 @@ export default function VendorDashboard() {
     }
   };
 
-  // ─── Product Toggle ────────────────────────────────────────────
+  //  Product Toggle 
   const toggleProductAvailability = async (
     productId: string,
     currentStatus: boolean,
@@ -154,14 +155,13 @@ export default function VendorDashboard() {
     }
   };
 
-  // ─── Order Status ──────────────────────────────────────────────
   const handleStatusUpdate = async (orderId: string, newStatus: string) => {
     const success = await updateOrderStatus(orderId, newStatus);
     if (success) fetchData();
     else Alert.alert(t("error"), t("errorUpdatingStatus"));
   };
 
-  // ─── Product CRUD ──────────────────────────────────────────────
+  //  Product CRUD 
   const openAddModal = () => {
     setEditingProduct(null);
     setProductForm(emptyForm);
@@ -247,14 +247,14 @@ export default function VendorDashboard() {
     );
   };
 
-  // ─── Helpers ───────────────────────────────────────────────────
+  // Helpers 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
       PENDING: "#fab1a0",
-      ACCEPTED: "#a7fbff",
+      ACCEPTED: "#a7ffba",
       PREPARING: "#fc5940",
       READY: "#55ef6c",
-      COMPLETED: "#55ef6c",
+      COMPLETED: "#a7ffba",
       CANCELLED: "#dfe6e9",
     };
     return colors[status] || "#dfe6e9";
@@ -276,7 +276,7 @@ export default function VendorDashboard() {
   const pendingCount = orders.filter((o) => o.status === "PENDING").length;
   const isOpen = dbUser?.vendorProfile?.isOpen;
 
-  // ─── Rendering ─────────────────────────────────────────────────
+  // Rendering 
   const renderOrders = () => (
     <ScrollView showsVerticalScrollIndicator={false}>
       {orders.length === 0 ? (
@@ -330,13 +330,10 @@ export default function VendorDashboard() {
                 )}
                 {order.status === "ACCEPTED" && (
                   <TouchableOpacity
-                    style={[
-                      styles.actionBtn,
-                      { backgroundColor: "#00b894", flex: 1 },
-                    ]}
+                    style={[styles.actionBtn, { backgroundColor: "#FFC700" }]}
                     onPress={() => handleStatusUpdate(order.id, "PREPARING")}
                   >
-                    <Text style={styles.btnText}>👨‍🍳 Commencer préparation</Text>
+                    <Text style={styles.btnText}>Commencer préparation</Text>
                   </TouchableOpacity>
                 )}
                 {order.status === "PREPARING" && (
@@ -455,7 +452,7 @@ export default function VendorDashboard() {
             <Text style={styles.shopStatusSub}>
               {isOpen
                 ? "Les clients peuvent commander"
-                : "Les commandes sont désactivées"}
+                : "Les commandes sont d ésactivées"}
             </Text>
           </View>
           <Switch
@@ -477,6 +474,7 @@ export default function VendorDashboard() {
           <View style={styles.infoRow}>
             <Ionicons name="storefront-outline" size={18} color="#636e72" />
             <Text style={styles.infoText}>{dbUser.vendorProfile.shopName}</Text>
+            <VerifiedBadge verified={dbUser.isVerified} />
           </View>
           <View style={styles.infoRow}>
             <Ionicons name="document-text-outline" size={18} color="#636e72" />
@@ -534,7 +532,7 @@ export default function VendorDashboard() {
     </ScrollView>
   );
 
-  // ─── Product Modal ─────────────────────────────────────────────
+  // Product Modal
   const renderProductModal = () => (
     <Modal
       visible={showProductModal}
@@ -564,7 +562,7 @@ export default function VendorDashboard() {
           <Text style={styles.inputLabel}>Description *</Text>
           <TextInput
             style={[styles.input, { height: 90, textAlignVertical: "top" }]}
-            placeholder="Décrivez ce plat..."
+            placeholder="DÃ©crivez ce plat..."
             multiline
             value={productForm.description}
             onChangeText={(v) =>
